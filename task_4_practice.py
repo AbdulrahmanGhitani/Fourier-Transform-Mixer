@@ -523,7 +523,7 @@ cv2.destroyAllWindows()
 cv2.imshow('Magnitude Spectrum', magnitude_spectrum.astype(np.uint8))
 cv2.waitKey(0)
 cv2.destroyAllWindows()
-
+s
 # Display the phase spectrum
 cv2.imshow('Phase Spectrum', phase_spectrum.astype(np.uint8))
 cv2.waitKey(0)
