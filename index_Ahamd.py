@@ -2,27 +2,28 @@ from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 import sys
-from pathlib import Path
 from PyQt5.uic import loadUiType
-import cv2
-from image_mixer import *
 
 ui, _ = loadUiType('main.ui')
-
 
 class BrightnessContrastGraphicsView(QGraphicsView):
     def __init__(self, image_path):
         super().__init__()
 
-
-
+        # Load an image and create a QGraphicsPixmapItem to display it
         self.scene = QGraphicsScene(self)
+        # self.pixmap_item = QGraphicsPixmapItem(QPixmap(image_path))
+        # self.scene.addItem(self.pixmap_item)
         self.setScene(self.scene)
         self.original_pixmap = QPixmap(image_path)
         self.grayscale_pixmap = self.convert_to_grayscale(self.original_pixmap)
         self.pixmap_item = QGraphicsPixmapItem(self.grayscale_pixmap)
         self.scene.addItem(self.pixmap_item)
 
+        # Enable the ability to move the image with the mouse
+        # self.setDragMode(QGraphicsView.ScrollHandDrag)
+
+        # Variables to track the rectangle drawing
         self.drawing_rectangle = False
         self.rectangle_item = None
         self.start_point = None
@@ -31,9 +32,9 @@ class BrightnessContrastGraphicsView(QGraphicsView):
         grayscale_pixmap = QPixmap.fromImage(image)
         return grayscale_pixmap
 
-    def mouseMoveEvent(self, event: QMouseEvent):
-        # You can capture the mouse position during the drag here
-        print("Mouse position during drag:", event.pos())
+    # def mouseMoveEvent(self, event: QMouseEvent):
+    #     # You can capture the mouse position during the drag here
+    #     print("Mouse position during drag:", event.pos())
     def mousePressEvent(self, event):
         if event.button() == Qt.RightButton:
             self.start_point = event.pos()
@@ -76,6 +77,7 @@ class BrightnessContrastGraphicsView(QGraphicsView):
 
         return points
 
+
 class MainApp(QWidget, ui):
     _show_hide_flag = True
 
@@ -85,53 +87,25 @@ class MainApp(QWidget, ui):
         self.setupUi(self)
         self.resize(1450, 900)
 
-        self.image_1 = ImageViewer('images.jpeg')
-        self.image_1.image_size = (250, 210)
-        qt_image = self.convert_cv_to_qt(self.image_1.gray_scale_image)
-        scene = QGraphicsScene(self)
-        pixmap_item = QGraphicsPixmapItem(qt_image)
-        scene.addItem(pixmap_item)
-        self.graphicsView_original_1.setScene(scene)
-
-        self.image_2 = ImageViewer('images (1).jpeg')
-        self.image_2.image_size = (250, 210)
-        qt_image = self.convert_cv_to_qt(self.image_2.gray_scale_image)
-        scene = QGraphicsScene(self)
-        pixmap_item = QGraphicsPixmapItem(qt_image)
-        scene.addItem(pixmap_item)
-        self.graphicsView_original_2.setScene(scene)
-
-        self.image_3 = ImageViewer('download.jpeg')
-        self.image_3.image_size = (250, 210)
-        qt_image = self.convert_cv_to_qt(self.image_3.gray_scale_image)
-        scene = QGraphicsScene(self)
-        pixmap_item = QGraphicsPixmapItem(qt_image)
-        scene.addItem(pixmap_item)
-        self.graphicsView_original_3.setScene(scene)
-
-        self.image_4 = ImageViewer('download (1).jpeg')
-        self.image_4.image_size = (250, 210)
-        qt_image = self.convert_cv_to_qt(self.image_4.gray_scale_image.astype(np.uint8))
-        scene = QGraphicsScene(self)
-        pixmap_item = QGraphicsPixmapItem(qt_image)
-        scene.addItem(pixmap_item)
-        self.graphicsView_original_4.setScene(scene)
+        # Load the image and display it in the QGraphicsView
+        image_path = 'download.jpeg'
+        self.graphics_view = BrightnessContrastGraphicsView(image_path)
+        # self.original_gray_image_1.setDragMode(QGraphicsView.ScrollHandDrag)
+        # self.scene = QGraphicsScene(self)
+        # self.pixmap_item = QGraphicsPixmapItem(QPixmap(image_path))
+        # self.scene.addItem(self.pixmap_item)
+        # self.original_gray_image_1.setScene(self.scene)
 
 
-
-    def convert_cv_to_qt(self, cv_image):
-        height, width = cv_image.shape
-        bytes_per_line = width
-        qt_image = QImage(cv_image.data.tobytes(), width, height, bytes_per_line, QImage.Format_Grayscale8)
-        return QPixmap.fromImage(qt_image)
-
+        self.graphics_view_layout1 = QHBoxLayout(self.original_gray_image_1)
+        self.graphics_view_layout1.addWidget(self.graphics_view)
+        self.original_gray_image_1.setLayout(self.graphics_view_layout1)
 
 def main():
     app = QApplication(sys.argv)
     window = MainApp()
     window.show()
     app.exec_()
-
 
 if __name__ == '__main__':
     main()

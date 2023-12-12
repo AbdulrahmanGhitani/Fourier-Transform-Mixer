@@ -440,104 +440,104 @@ cv2.destroyAllWindows()
 # /////////////////////////////////////////////////////////////////////////////////
 import cv2
 import numpy as np
-# iterate on all photos to resize the wrt the smallest one
-
-# Assuming img_list is a list containing your image paths
-img_paths = ['images.jpeg', 'download.jpeg', 'download (1).jpeg', 'images (1).jpeg']
-
-# Read images
-img_list = [cv2.imread(img_path) for img_path in img_paths]
-
-# Get the size of the smallest image
-smallest_size = min(img.shape[:2] for img in img_list)
-
-# Resize all images to the size of the smallest image
-resized_images = [cv2.resize(img, (smallest_size[1], smallest_size[0])) for img in img_list]
-
-# Display or save the resized images as needed
-for i, resized_img in enumerate(resized_images):
-    cv2.imshow(f"Resized Image {i+1}", resized_img)
-
-cv2.waitKey(0)
-cv2.destroyAllWindows()
-
-# //////////////////////////////////////////////////////////////////////////////////////////////////////////////
-# # start here -resize -import - gray scale - brightness and contrast
-import cv2
-import numpy as np
-
-image = cv2.imread('images.jpeg')
-gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-
-image_resized = cv2.resize(image,(150,150))
-# define the alpha and beta
-
-alpha = 1.5 # Contrast control
-beta = 1.2 # Brightness control
-
-# call convertScaleAbs function
-adjusted = cv2.convertScaleAbs(image, alpha=alpha, beta=beta)
-
-
-# display the output image
-cv2.imshow('adjusted', adjusted)
-cv2.imshow('Original image', image)
-cv2.imshow('Gray image', gray)
-cv2.imshow('Resized image', image_resized)
-
-cv2.waitKey(0)
-cv2.destroyAllWindows()
+    # # iterate on all photos to resize the wrt the smallest one
+    #
+    # # Assuming img_list is a list containing your image paths
+    # img_paths = ['images.jpeg', 'download.jpeg', 'download (1).jpeg', 'images (1).jpeg']
+    #
+    # # Read images
+    # img_list = [cv2.imread(img_path) for img_path in img_paths]
+    #
+    # # Get the size of the smallest image
+    # smallest_size = min(img.shape[:2] for img in img_list)
+    #
+    # # Resize all images to the size of the smallest image
+    # resized_images = [cv2.resize(img, (smallest_size[1], smallest_size[0])) for img in img_list]
+    #
+    # # Display or save the resized images as needed
+    # for i, resized_img in enumerate(resized_images):
+    #     cv2.imshow(f"Resized Image {i+1}", resized_img)
+    #
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
+    #
+    # # //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    # # # start here -resize -import - gray scale - brightness and contrast
+    # import cv2
+    # import numpy as np
+    #
+    # image = cv2.imread('images.jpeg')
+    # gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    #
+    # image_resized = cv2.resize(image,(150,150))
+    # # define the alpha and beta
+    #
+    # alpha = 1.5 # Contrast control
+    # beta = 1.2 # Brightness control
+    #
+    # # call convertScaleAbs function
+    # adjusted = cv2.convertScaleAbs(image, alpha=alpha, beta=beta)
+    #
+    #
+    # # display the output image
+    # cv2.imshow('adjusted', adjusted)
+    # cv2.imshow('Original image', image)
+    # cv2.imshow('Gray image', gray)
+    # cv2.imshow('Resized image', image_resized)
+    #
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
 
 # ---------------------------------------------------------------------------------------------------------------
 # ---------------------------------------------------------------------------------------------------------------
 #  final code of real + imaginary + phase + magnitude
 
 
-# Read the image in grayscale
-image = cv2.imread('images.jpeg', cv2.IMREAD_GRAYSCALE)
-
-# Perform 2D Fourier Transform
-f = np.fft.fft2(image)
-
-# Shift zero frequency components to the center
-fshift = np.fft.fftshift(f)
-
-# Calculate magnitude spectrum
-magnitude_spectrum = 20 * np.log(np.abs(fshift))
-
-# Calculate phase spectrum
-phase_spectrum = np.angle(fshift)
-
-# Calculate real part spectrum
-real_spectrum = 20 * np.log(np.real(fshift))
-
-# Calculate imaginary part spectrum
-imag_spectrum = np.imag(fshift)
-
-# Display the input image
-cv2.imshow('Input Image', image)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
-
-# Display the magnitude spectrum
-cv2.imshow('Magnitude Spectrum', magnitude_spectrum.astype(np.uint8))
-cv2.waitKey(0)
-cv2.destroyAllWindows()
-
-# Display the phase spectrum
-cv2.imshow('Phase Spectrum', phase_spectrum.astype(np.uint8))
-cv2.waitKey(0)
-cv2.destroyAllWindows()
-
-# Display the real part spectrum
-cv2.imshow('Real Part Spectrum', real_spectrum.astype(np.uint8))
-cv2.waitKey(0)
-cv2.destroyAllWindows()
-
-# Display the imaginary part spectrum
-cv2.imshow('Imaginary Part Spectrum', imag_spectrum.astype(np.uint8))
-cv2.waitKey(0)
-cv2.destroyAllWindows()
+    # # Read the image in grayscale
+    # image = cv2.imread('images.jpeg', cv2.IMREAD_GRAYSCALE)
+    #
+    # # Perform 2D Fourier Transform
+    # f = np.fft.fft2(image)
+    #
+    # # Shift zero frequency components to the center
+    # fshift = np.fft.fftshift(f)
+    #
+    # # Calculate magnitude spectrum
+    # magnitude_spectrum = 20 * np.log(np.abs(fshift))
+    #
+    # # Calculate phase spectrum
+    # phase_spectrum = np.angle(fshift)
+    #
+    # # Calculate real part spectrum
+    # real_spectrum = 20 * np.log(np.real(fshift))
+    #
+    # # Calculate imaginary part spectrum
+    # imag_spectrum = np.imag(fshift)
+    #
+    # # Display the input image
+    # cv2.imshow('Input Image', image)
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
+    #
+    # # Display the magnitude spectrum
+    # cv2.imshow('Magnitude Spectrum', magnitude_spectrum.astype(np.uint8))
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
+    #
+    # # Display the phase spectrum
+    # cv2.imshow('Phase Spectrum', phase_spectrum.astype(np.uint8))
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
+    #
+    # # Display the real part spectrum
+    # cv2.imshow('Real Part Spectrum', real_spectrum.astype(np.uint8))
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
+    #
+    # # Display the imaginary part spectrum
+    # cv2.imshow('Imaginary Part Spectrum', imag_spectrum.astype(np.uint8))
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
 # --------------------------------------------------------------------------------------
 # ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -559,59 +559,40 @@ image4 = cv2.resize(image4b,(500,500))
 
 # Define custom weights for magnitude, phase, real, and imaginary components
 
-weights_magnitude = [1.0, 0.8, 0.5, 0.3]
-weights_phase = [1.0, 0.0, 0.0, 0.0]
-weights_real = [0.8, 0.5, 0.2, 1.0]
-weights_imaginary = [0.0, 0.0, 0.0, 0.0]
-
-# Create a list of input images
-input_images = [image1,image2,image3,image4]
-
-# Initialize an empty complex array for the output Fourier transform
-output_fft = np.zeros_like(np.fft.fft2(input_images[0]), dtype=np.complex128)
-
-# Compute the weighted sum of Fourier transforms
-for i in range(len(input_images)):
-    # Compute Fourier transform of the current image
-    fft = np.fft.fft2(input_images[i])
-
-    # Apply custom weights to magnitude, phase, real, and imaginary components
-    weighted_fft = (
-        weights_magnitude[i] * np.abs(fft) * np.exp(1j * weights_phase[i])
-    )
-
-    # Apply custom weight only to the phase component
-    # +
-    #         weights_real[i] * np.real(fft) +
-    #         1j * weights_imaginary[i] * np.imag(fft)
-    # here we modify the phase
-    # weighted_fft = (
-    #         np.abs(fft) * np.exp(1j * weights_phase[i]) +
-    #         1j * weights_imaginary[i] * np.imag(fft)
-    # )
-
-
-    # Apply custom weight only to the magnitude component
-    # weighted_fft = (
-    #         weights_magnitude[i] * np.abs(fft) +
-    #         weights_real[i] * np.real(fft) +
-    #         1j * weights_imaginary[i] * np.imag(fft)
-    # )
-
-    # Accumulate the weighted Fourier transform
-    output_fft += weighted_fft
-
-# Compute the inverse Fourier transform of the weighted sum
-output_image = np.abs(np.fft.ifft2(output_fft)).astype(np.uint8)
-
-# Display the input images
-for i in range(len(input_images)):
-    cv2.imshow(f'Input Image {i+1}', input_images[i])
-
-# Display the output image
-cv2.imshow('Output Image', output_image)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
+    # weights_magnitude = [1.0, 0.0, 0.0, 0.0]
+    # weights_phase = [1.0, 0.0, 0.0, 0.0]
+    # # weights_real = [0.8, 0.5, 0.2, 1.0]
+    # # weights_imaginary = [0.0, 0.0, 0.0, 0.0]
+    #
+    # # Create a list of input images
+    # input_images = [image1,image2,image3,image4]
+    #
+    # # Initialize an empty complex array for the output Fourier transform
+    # output_fft = np.zeros_like(np.fft.fft2(input_images[0]), dtype=np.complex128)
+    #
+    # # Compute the weighted sum of Fourier transforms
+    # for i in range(len(input_images)):
+    #     # Compute Fourier transform of the current image
+    #     fft = np.fft.fft2(input_images[i])
+    #
+    #     # Apply custom weights to magnitude, phase, real, and imaginary components
+    #     weighted_fft = (
+    #         weights_magnitude[i] * np.abs(fft) * np.exp(1j * weights_phase[i])
+    #     )
+    #
+    #     output_fft += weighted_fft
+    #
+    # # Compute the inverse Fourier transform of the weighted sum
+    # output_image = np.abs(np.fft.ifft2(output_fft)).astype(np.uint8)
+    #
+    # # Display the input images
+    # for i in range(len(input_images)):
+    #     cv2.imshow(f'Input Image {i+1}', input_images[i])
+    #
+    # # Display the output image
+    # cv2.imshow('Output Image', output_image)
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
 
 
 
@@ -622,19 +603,62 @@ cv2.destroyAllWindows()
 
 # //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 # messi code for asg
-fft4 = np.fft.fft2(image2)
-mag_of_messi = np.abs(fft4)
+fft_messi = np.fft.fft2(image2)
+mag_of_messi = np.abs(fft_messi)
+phase_messi = np.angle(fft_messi)
 
-fft9 = np.fft.fft2(image1)
-phase_parrot = np.angle(fft9)
 
-weighted_fft = (
-        mag_of_messi * np.exp(1j * phase_parrot) +
+fft_parrot = np.fft.fft2(image1)
+mag_parrot = np.abs(fft_parrot)
+phase_parrot = np.angle(fft_parrot)
 
-        1j * np.imag(fft9)
+fft_natural = np.fft.fft2(image3)
+mag_of_natural = np.abs(fft_natural)
+
+weighted_fft = (np.exp(1j * phase_messi)* mag_parrot +
+    1j * np.imag(fft_messi)
 )
 
 output_image = np.abs(np.fft.ifft2(weighted_fft)).astype(np.uint8)
+cv2.imshow('Output Image kkkk', output_image)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
+##############################################################################
+
+# FFT and magnitude for each image
+fft_messi = np.fft.fft2(image2)
+mag_of_messi = np.abs(fft_messi)
+phase_messi = np.angle(fft_messi)
+
+fft_parrot = np.fft.fft2(image1)
+mag_parrot = np.abs(fft_parrot)
+phase_parrot = np.angle(fft_parrot)
+
+fft_natural = np.fft.fft2(image3)
+mag_of_natural = np.abs(fft_natural)
+phase_natural = np.angle(fft_natural)
+
+# Define weights for magnitude and phase of each image
+weight_messi_mag = 1
+weight_messi_phase = 1.0
+
+weight_parrot_mag = 0.0
+weight_parrot_phase = 1.0
+
+weight_natural_mag = 0.0
+weight_natural_phase = 0.0
+
+# Weighted FFT summation
+weighted_fft = (
+    weight_messi_mag * np.exp(1j * weight_messi_phase * phase_messi) * mag_parrot +
+    weight_parrot_mag * np.exp(1j * weight_parrot_phase * phase_parrot) * mag_of_messi +
+    weight_natural_mag * np.exp(1j * weight_natural_phase * phase_natural) * mag_of_natural
+)
+
+# Inverse FFT to get the output image
+output_image = np.abs(np.fft.ifft2(weighted_fft)).astype(np.uint8)
+
+# Display the output image
 cv2.imshow('Output Image', output_image)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
