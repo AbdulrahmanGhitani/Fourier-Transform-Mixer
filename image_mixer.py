@@ -24,10 +24,6 @@ class ImageViewer(QGraphicsView):
         self._image_real_part = None
         self._image_imaginary_part = None
 
-    def convert_to_grayscale(self, pixmap):
-        image = pixmap.toImage().convertToFormat(QImage.Format_Grayscale8)
-        grayscale_pixmap = QPixmap.fromImage(image)
-        return grayscale_pixmap
     @property
     def original_image(self):
         return self._original_image
