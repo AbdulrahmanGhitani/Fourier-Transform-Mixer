@@ -9,6 +9,101 @@ from image_mixer import *
 ui, _ = loadUiType('main.ui')
 
 
+class MainApp(QWidget, ui):
+    _show_hide_flag = True
+
+    def __init__(self, parent=None):
+        super(MainApp, self).__init__(parent)
+        QMainWindow.__init__(self)
+        self.setupUi(self)
+        self.resize(1450, 900)
+
+        self.image_1 = ViewOriginal()
+        # self.image_1.mouseMoveEvent(QMouseEvent)
+
+        self.graphics_view_layout1 = QHBoxLayout(self.graphicsView_original_1)
+        self.graphics_view_layout1.addWidget(self.image_1)
+        self.graphicsView_original_1.setLayout(self.graphics_view_layout1)
+
+
+        # self.image_2 = ImageViewer('images (1).jpeg')
+        # self.image_2.image_size = (250, 210)
+        # qt_image = self.convert_cv_to_qt(self.image_2.gray_scale_image)
+        # scene = QGraphicsScene(self)
+        # pixmap_item = QGraphicsPixmapItem(qt_image)
+        # scene.addItem(pixmap_item)
+        # self.graphicsView_original_2.setScene(scene)
+        #
+        # self.image_3 = ImageViewer('download.jpeg')
+        # self.image_3.image_size = (250, 210)
+        # qt_image = self.convert_cv_to_qt(self.image_3.gray_scale_image)
+        # scene = QGraphicsScene(self)
+        # pixmap_item = QGraphicsPixmapItem(qt_image)
+        # scene.addItem(pixmap_item)
+        # self.graphicsView_original_3.setScene(scene)
+        #
+        # self.image_4 = ImageViewer('download (1).jpeg')
+        # self.image_4.image_size = (250, 210)
+        # qt_image = self.convert_cv_to_qt(self.image_4.gray_scale_image.astype(np.uint8))
+        # scene = QGraphicsScene(self)
+        # pixmap_item = QGraphicsPixmapItem(qt_image)
+        # scene.addItem(pixmap_item)
+        # self.graphicsView_original_4.setScene(scene)
+
+        # self.image_9 = ImageViewer('images (1).jpeg')
+        # self.image_9.original_image_magnitude
+        # qt_image = self.convert_cv_to_qt(self.image_9.original_image_magnitude.astype(np.uint8))
+        # scene = QGraphicsScene(self)
+        # pixmap_item = QGraphicsPixmapItem(qt_image)
+        # scene.addItem(pixmap_item)
+        # self.graphicsView_weight_1.setScene(scene)
+
+
+
+        self.image_w = ViewWeight("images.jpeg")
+        self.graphics_view_layout1 = QHBoxLayout(self.graphicsView_weight_1)
+        self.graphics_view_layout1.addWidget(self.image_w)
+        self.graphicsView_weight_1.setLayout(self.graphics_view_layout1)
+
+    def convert_cv_to_qt(self, cv_image):
+        height, width = cv_image.shape
+        bytes_per_line = width
+        qt_image = QImage(cv_image.data.tobytes(), width, height, bytes_per_line, QImage.Format_Grayscale8)
+        return QPixmap.fromImage(qt_image)
+    # def weights(self):
+    #     path1=self.image_1.path()
+    #     # print(path1)
+    #     self.image_w = ViewWeight(path1)
+    #     self.graphics_view_layout1 = QHBoxLayout(self.graphicsView_weight_1)
+    #     self.graphics_view_layout1.addWidget(self.image_w)
+    #     self.graphicsView_weight_1.setLayout(self.graphics_view_layout1)
+
+        # self.graphicsView_7 = CustomGraphicsView(self.graphicsView_7, self)
+
+        # image_path = 'download.jpeg'
+        # scene = QGraphicsScene(self)
+        # pixmap = QPixmap(image_path)
+        # item = QGraphicsPixmapItem(pixmap)
+        # scene.addItem(item)
+        # self.graphicsView_7.setScene(scene)
+
+
+def main():
+    app = QApplication(sys.argv)
+    window = MainApp()
+    window.show()
+    app.exec_()
+
+
+if __name__ == '__main__':
+    main()
+
+
+
+
+
+
+
 
 class BrightnessContrastGraphicsView(QGraphicsView):
     def __init__(self, image_path):
@@ -60,6 +155,7 @@ class BrightnessContrastGraphicsView(QGraphicsView):
         if self.drawing_rectangle:
             self.drawing_rectangle = False
             self.start_point = None
+
 
 class CustomGraphicsView(QGraphicsView):
     def __init__(self, graphics_view, parent=None):
@@ -141,75 +237,3 @@ class CustomGraphicsView(QGraphicsView):
         # Implement your logic to obtain indices or points inside the rectangle here
         # For now, returning a dummy result
         return "Not implemented yet"
-
-
-
-class MainApp(QWidget, ui):
-    _show_hide_flag = True
-
-    def __init__(self, parent=None):
-        super(MainApp, self).__init__(parent)
-        QMainWindow.__init__(self)
-        self.setupUi(self)
-        self.resize(1450, 900)
-
-        self.image_1 = ImageViewer('images.jpeg')
-        self.image_1.image_size = (250, 210)
-        qt_image = self.convert_cv_to_qt(self.image_1.gray_scale_image)
-        scene = QGraphicsScene(self)
-        pixmap_item = QGraphicsPixmapItem(qt_image)
-        scene.addItem(pixmap_item)
-        self.graphicsView_original_1.setScene(scene)
-
-        self.image_2 = ImageViewer('images (1).jpeg')
-        self.image_2.image_size = (250, 210)
-        qt_image = self.convert_cv_to_qt(self.image_2.gray_scale_image)
-        scene = QGraphicsScene(self)
-        pixmap_item = QGraphicsPixmapItem(qt_image)
-        scene.addItem(pixmap_item)
-        self.graphicsView_original_2.setScene(scene)
-
-        self.image_3 = ImageViewer('download.jpeg')
-        self.image_3.image_size = (250, 210)
-        qt_image = self.convert_cv_to_qt(self.image_3.gray_scale_image)
-        scene = QGraphicsScene(self)
-        pixmap_item = QGraphicsPixmapItem(qt_image)
-        scene.addItem(pixmap_item)
-        self.graphicsView_original_3.setScene(scene)
-
-        self.image_4 = ImageViewer('download (1).jpeg')
-        self.image_4.image_size = (250, 210)
-        qt_image = self.convert_cv_to_qt(self.image_4.gray_scale_image.astype(np.uint8))
-        scene = QGraphicsScene(self)
-        pixmap_item = QGraphicsPixmapItem(qt_image)
-        scene.addItem(pixmap_item)
-        self.graphicsView_original_4.setScene(scene)
-
-
-
-    def convert_cv_to_qt(self, cv_image):
-        height, width = cv_image.shape
-        bytes_per_line = width
-        qt_image = QImage(cv_image.data.tobytes(), width, height, bytes_per_line, QImage.Format_Grayscale8)
-        return QPixmap.fromImage(qt_image)
-
-
-        # self.graphicsView_7 = CustomGraphicsView(self.graphicsView_7, self)
-
-        image_path = 'download.jpeg'
-        scene = QGraphicsScene(self)
-        pixmap = QPixmap(image_path)
-        item = QGraphicsPixmapItem(pixmap)
-        scene.addItem(item)
-        self.graphicsView_7.setScene(scene)
-
-
-def main():
-    app = QApplication(sys.argv)
-    window = MainApp()
-    window.show()
-    app.exec_()
-
-
-if __name__ == '__main__':
-    main()

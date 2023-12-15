@@ -290,54 +290,54 @@ plt.show()
 
 
 #  final code of real + imaginary + phase + magnitude
-# import cv2
-# import numpy as np
-#
-# # Read the image in grayscale
-# image = cv2.imread('images.jpeg', cv2.IMREAD_GRAYSCALE)
-#
-# # Perform 2D Fourier Transform
-# f = np.fft.fft2(image)
-#
-# # Shift zero frequency components to the center
-# fshift = np.fft.fftshift(f)
-#
-# # Calculate magnitude spectrum
-# magnitude_spectrum = 20 * np.log(np.abs(fshift))
-#
-# # Calculate phase spectrum
-# phase_spectrum = np.angle(fshift)
-#
-# # Calculate real part spectrum
-# real_spectrum = 20 * np.log(np.real(fshift))
-#
-# # Calculate imaginary part spectrum
-# imag_spectrum = np.imag(fshift)
-#
-# # Display the input image
-# cv2.imshow('Input Image', image)
-# cv2.waitKey(0)
-# cv2.destroyAllWindows()
-#
-# # Display the magnitude spectrum
-# cv2.imshow('Magnitude Spectrum', magnitude_spectrum.astype(np.uint8))
-# cv2.waitKey(0)
-# cv2.destroyAllWindows()
-#
-# # Display the phase spectrum
-# cv2.imshow('Phase Spectrum', phase_spectrum.astype(np.uint8))
-# cv2.waitKey(0)
-# cv2.destroyAllWindows()
-#
-# # Display the real part spectrum
-# cv2.imshow('Real Part Spectrum', real_spectrum.astype(np.uint8))
-# cv2.waitKey(0)
-# cv2.destroyAllWindows()
-#
-# # Display the imaginary part spectrum
-# cv2.imshow('Imaginary Part Spectrum', imag_spectrum.astype(np.uint8))
-# cv2.waitKey(0)
-# cv2.destroyAllWindows()
+import cv2
+import numpy as np
+
+# Read the image in grayscale
+image = cv2.imread('images.jpeg', cv2.IMREAD_GRAYSCALE)
+
+# Perform 2D Fourier Transform
+f = np.fft.fft2(image)
+
+# Shift zero frequency components to the center
+fshift = np.fft.fftshift(f)
+
+# Calculate magnitude spectrum
+magnitude_spectrum = 20 * np.log(np.abs(fshift))
+
+# Calculate phase spectrum
+phase_spectrum = np.angle(fshift)
+
+# Calculate real part spectrum
+real_spectrum = 20 * np.log(np.real(fshift))
+
+# Calculate imaginary part spectrum
+imag_spectrum = np.imag(fshift)
+
+# Display the input image
+cv2.imshow('Input Image', image)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
+
+# Display the magnitude spectrum
+cv2.imshow('Magnitude Spectrum', magnitude_spectrum.astype(np.uint8))
+cv2.waitKey(0)
+cv2.destroyAllWindows()
+
+# Display the phase spectrum
+cv2.imshow('Phase Spectrum', phase_spectrum.astype(np.uint8))
+cv2.waitKey(0)
+cv2.destroyAllWindows()
+
+# Display the real part spectrum
+cv2.imshow('Real Part Spectrum', real_spectrum.astype(np.uint8))
+cv2.waitKey(0)
+cv2.destroyAllWindows()
+
+# Display the imaginary part spectrum
+cv2.imshow('Imaginary Part Spectrum', imag_spectrum.astype(np.uint8))
+cv2.waitKey(0)
+cv2.destroyAllWindows()
 
 """
 import cv2

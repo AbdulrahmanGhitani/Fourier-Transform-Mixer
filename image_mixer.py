@@ -1,10 +1,150 @@
 import cv2
 import numpy as np
-from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.QtWidgets import *
+import sys
+from PyQt5.uic import loadUiType
+import cv2
+from image_mixer import *
 
 
-class ImageViewer(QGraphicsView):
+class ViewOriginal(QGraphicsView):
+    imageSelected = pyqtSignal(str)
+
+    def __init__(self):
+        super().__init__()
+
+        self.scene = QGraphicsScene(self)
+        self.setScene(self.scene)
+        self.pixmap_item = None
+        self.original_pixmap = None
+        self.grayscale_pixmap = None
+        self.path = self.path()
+
+    def resize_pixmap(self, new_width, new_height):
+        if self.original_pixmap:
+            self.original_pixmap = self.original_pixmap.scaled(new_width, new_height, Qt.KeepAspectRatio)
+            self.grayscale_pixmap = self.convert_to_grayscale(self.original_pixmap)
+
+    def convert_to_grayscale(self, pixmap):
+        image = pixmap.toImage().convertToFormat(QImage.Format_Grayscale8)
+        grayscale_pixmap = QPixmap.fromImage(image)
+        return grayscale_pixmap
+
+    def mouseDoubleClickEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            self.openImageDialog()
+
+    def mouseMoveEvent(self, event: QMouseEvent):
+        # You can capture the mouse position during the drag here
+        print("Mouse position during drag:", event.pos())
+
+    def openImageDialog(self):
+        options = QFileDialog.Options()
+        options |= QFileDialog.DontUseNativeDialog
+        fileName, _ = QFileDialog.getOpenFileName(self, "Open Image File", "",
+                                                  "Image Files (*.png *.jpg *.bmp *.jpeg *.tif *.tiff);;All Files (*)",
+                                                  options=options)
+        if fileName:
+            self.loadImage(fileName)
+            self.imageSelected.emit(fileName)  # Emit the filename
+            print(fileName)
+
+            return fileName
+
+    def path(self):
+        path=self.openImageDialog
+        # print(path)
+        return path
+
+    def loadImage(self, filename):
+        self.original_pixmap = QPixmap(filename)
+        self.resize_pixmap(300, 200)
+
+        if not self.pixmap_item:
+            self.pixmap_item = QGraphicsPixmapItem(self.grayscale_pixmap)
+            self.scene.addItem(self.pixmap_item)
+
+        else:
+            self.pixmap_item.setPixmap(self.grayscale_pixmap)
+
+class ViewWeight(QGraphicsView):
+    def __init__(self, image_path):
+        super().__init__()
+
+        self.scene = QGraphicsScene(self)
+        self.setScene(self.scene)
+        self.image = ImageViewer(image_path)
+        self.qt_image = self.convert_cv_to_qt(self.image.original_image_magnitude.astype(np.uint8))
+        self.original_pixmap = QPixmap(self.qt_image)
+        self.grayscale_pixmap = self.convert_to_grayscale(self.original_pixmap)
+        self.resized_photo=self.resize_pixmap(300,200)
+        self.pixmap_item = QGraphicsPixmapItem(self.grayscale_pixmap)
+        self.scene.addItem(self.pixmap_item)
+
+
+        self.drawing_rectangle = False
+        self.rectangle_item = None
+        self.start_point = None
+    def convert_to_grayscale(self, pixmap):
+        image = pixmap.toImage().convertToFormat(QImage.Format_Grayscale8)
+        grayscale_pixmap = QPixmap.fromImage(image)
+        return grayscale_pixmap
+
+    def resize_pixmap(self, new_width, new_height):
+        self.original_pixmap = self.original_pixmap.scaled(new_width, new_height, Qt.KeepAspectRatio)
+        self.grayscale_pixmap = self.convert_to_grayscale(self.original_pixmap)
+
+    def convert_cv_to_qt(self, cv_image):
+        height, width = cv_image.shape
+        bytes_per_line = width
+        qt_image = QImage(cv_image.data.tobytes(), width, height, bytes_per_line, QImage.Format_Grayscale8)
+        return QPixmap.fromImage(qt_image)
+    def mousePressEvent(self, event):
+        if event.button() == Qt.RightButton:
+            self.start_point = event.pos()
+            self.drawing_rectangle = True
+
+    def mouseMoveEvent(self, event):
+        if event.button() != Qt.RightButton:
+            if self.drawing_rectangle:
+                current_point = event.pos()
+                rect = QRectF(self.start_point, current_point).normalized()
+
+                if not self.rectangle_item:
+                    self.rectangle_item = QGraphicsRectItem(rect)
+                    pen = QPen(QColor(Qt.white), 2,
+                               Qt.DashLine)  # You can use Qt.DashLine or Qt.DotLine for a dashed or dotted line
+                    self.rectangle_item.setPen(pen)
+                    self.scene.addItem(self.rectangle_item)
+                else:
+                    self.rectangle_item.setRect(rect)
+        else:
+            print("Mouse position during drag:", event.pos())
+
+    def mouseReleaseEvent(self, event):
+        if self.drawing_rectangle:
+            self.drawing_rectangle = False
+            self.start_point = None
+
+            # Get information about the points inside the rectangle
+            points_in_rectangle = self.get_points_in_rectangle(self.rectangle_item.rect())
+            # print("Points inside the rectangle:", points_in_rectangle)
+
+    def get_points_in_rectangle(self, rectangle):
+        # Get the region of interest from the image
+        region_of_interest = self.grayscale_pixmap.toImage().copy(rectangle.toRect()).convertToFormat(QImage.Format_Grayscale8)
+        # Get the pixel values within the rectangle
+        points = []
+        for y in range(region_of_interest.height()):
+            for x in range(region_of_interest.width()):
+                pixel_value = region_of_interest.pixel(x, y)
+                points.append((x + int(rectangle.x()), y + int(rectangle.y()), QColor(pixel_value).getRgb()))
+        print(pixel_value)
+        return points
+
+class ImageViewer():
     def __init__(self, path):
 
         self._original_image = cv2.imread(f'{path}')
@@ -23,6 +163,7 @@ class ImageViewer(QGraphicsView):
         self._equalized_image_phase = self.original_image_phase
         self._image_real_part = None
         self._image_imaginary_part = None
+
 
     @property
     def original_image(self):
@@ -124,8 +265,6 @@ class ImageViewer(QGraphicsView):
     def image_imaginary_part(self):
         self._image_imaginary_part = np.imag(self._image_fft_shift)
         return self._image_imaginary_part
-
-
 
 class MixImage(object):
     def __init__(self, image1, image2, image3, image4):
