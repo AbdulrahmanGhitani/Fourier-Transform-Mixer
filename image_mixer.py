@@ -38,7 +38,7 @@ class ViewOriginal(QGraphicsView):
 
     def mouseMoveEvent(self, event: QMouseEvent):
         # You can capture the mouse position during the drag here
-        print("Mouse position during drag:", event.pos())
+        print("Mouse position during drag:", self.mapToScene(event.pos()))
 
     def openImageDialog(self):
         options = QFileDialog.Options()
