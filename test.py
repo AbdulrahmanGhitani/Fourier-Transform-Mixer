@@ -19,7 +19,7 @@ def combine_images(images, selected_magnitudes, selected_phases, weights):
     combined_phase = np.zeros_like(images[0], dtype=np.float64)
 
     # Normalize weights so that they sum to 1
-    weights = np.array(weights) / np.sum(weights)
+    weights = np.array(weights) 
 
     for i in range(len(images)):
         magnitude, phase = get_magnitude_and_phase(images[i])
@@ -41,7 +41,7 @@ def combine_images(images, selected_magnitudes, selected_phases, weights):
     combined_image = np.fft.ifft2(combined_f_transform).real
 
     # Convert the result back to uint8
-    combined_image = np.clip(combined_image, 0, 255).astype(np.uint8)
+    # combined_image = np.clip(combined_image, 0, 255).astype(np.uint8)
 
     return combined_image
 
@@ -52,7 +52,7 @@ image2 = cv2.imread('images (1).jpeg', cv2.IMREAD_GRAYSCALE)
 image3 = cv2.imread('download.jpeg', cv2.IMREAD_GRAYSCALE)
 image4 = cv2.imread('download (1).jpeg', cv2.IMREAD_GRAYSCALE)
 
-target_size = (125, 125)
+target_size = (500, 500)
 image1 = cv2.resize(image1, target_size)
 image2 = cv2.resize(image2, target_size)
 image3 = cv2.resize(image3, target_size)
@@ -62,8 +62,10 @@ image4 = cv2.resize(image4, target_size)
 weights = [1, 1.0, 1.0, 1.0]
 
 # Choose whether to use magnitude or phase for each image
-selected_magnitudes = [True, False, True, False]
-selected_phases = [False, True, False, True]
+# selected_magnitudes = [True, False, True, False]
+# selected_phases = [False, True, False, True]
+selected_magnitudes = [False, True, False, False]
+selected_phases = [True, False, False, False]
 
 # Combine images
 combined_image = combine_images([image1, image2, image3, image4], selected_magnitudes, selected_phases, weights)
