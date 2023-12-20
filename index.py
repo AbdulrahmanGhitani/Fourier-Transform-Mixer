@@ -128,18 +128,18 @@ class BrightnessContrastGraphicsView(QGraphicsView):
 
     def mouseMoveEvent(self, event: QMouseEvent):
         # You can capture the mouse position during the drag here
-        print("Mouse position during drag:", event.pos())
+        print("Mouse position during drag:", self.mapToScene(event.pos()))
     def mousePressEvent(self, event):
         if event.button() == Qt.RightButton:
-            self.start_point = event.pos()
+            self.start_point = self.mapToScene(event.pos())
             self.drawing_rectangle = True
 
     def mouseMoveEvent(self, event):
         if event.button() != Qt.RightButton:
             if self.drawing_rectangle:
-                current_point = event.pos()
+                current_point =self.mapToScene(event.pos())
                 rect = QRectF(self.start_point, current_point).normalized()
-
+                
                 if not self.rectangle_item:
                     self.rectangle_item = QGraphicsRectItem(rect)
                     pen = QPen(QColor(Qt.white), 2,
@@ -149,7 +149,7 @@ class BrightnessContrastGraphicsView(QGraphicsView):
                 else:
                     self.rectangle_item.setRect(rect)
         else:
-            print("Mouse position during drag:", event.pos())
+            print("Mouse position during drag:", self.mapToScene(event.pos()))
 
     def mouseReleaseEvent(self, event):
         if self.drawing_rectangle:
@@ -181,22 +181,23 @@ class CustomGraphicsView(QGraphicsView):
 
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
-            self.origin = event.pos()
+        
+            self.origin =self.mapToScene(event.pos())
             self.rubber_band.setGeometry(QRect(self.origin, QSize()))
             self.rubber_band.show()
 
             # Start drawing a rectangle
             self.drawing_rectangle = True
-            self.start_point = event.pos()
+            self.start_point = self.mapToScene(event.pos())
 
     def mouseMoveEvent(self, event):
         if not self.origin.isNull():
-            self.rubber_band.setGeometry(QRect(self.origin, event.pos()).normalized())
+            self.rubber_band.setGeometry(QRect(self.origin, self.mapToScene(event.pos())).normalized())
 
         if self.drawing_rectangle:
-            current_point = event.pos()
+            current_point = self.mapToScene(event.pos())
             rect = QRectF(self.start_point, current_point).normalized()
-
+            
             if not self.rectangle_item:
                 self.rectangle_item = QGraphicsRectItem(rect)
                 self.rectangle_item.setPen(QColor(Qt.blue))

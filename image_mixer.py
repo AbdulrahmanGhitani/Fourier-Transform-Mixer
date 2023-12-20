@@ -103,13 +103,13 @@ class ViewWeight(QGraphicsView):
         return QPixmap.fromImage(qt_image)
     def mousePressEvent(self, event):
         if event.button() == Qt.RightButton:
-            self.start_point = event.pos()
+            self.start_point = self.mapToScene(event.pos())
             self.drawing_rectangle = True
 
     def mouseMoveEvent(self, event):
         if event.button() != Qt.RightButton:
             if self.drawing_rectangle:
-                current_point = event.pos()
+                current_point = self.mapToScene(event.pos())
                 rect = QRectF(self.start_point, current_point).normalized()
 
                 if not self.rectangle_item:
@@ -121,7 +121,7 @@ class ViewWeight(QGraphicsView):
                 else:
                     self.rectangle_item.setRect(rect)
         else:
-            print("Mouse position during drag:", event.pos())
+            print("Mouse position during drag:",self.mapToScene(event.pos()))
 
     def mouseReleaseEvent(self, event):
         if self.drawing_rectangle:
@@ -141,7 +141,7 @@ class ViewWeight(QGraphicsView):
             for x in range(region_of_interest.width()):
                 pixel_value = region_of_interest.pixel(x, y)
                 points.append((x + int(rectangle.x()), y + int(rectangle.y()), QColor(pixel_value).getRgb()))
-        print(pixel_value)
+        #print(pixel_value)
         return points
 
 class ImageViewer():
