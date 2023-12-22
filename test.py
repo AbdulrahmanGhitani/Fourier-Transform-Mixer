@@ -19,7 +19,7 @@ def combine_images(images, selected_magnitudes, selected_phases, weights):
     combined_phase = np.zeros_like(images[0], dtype=np.float64)
 
     # Normalize weights so that they sum to 1
-    weights = np.array(weights) / np.sum(weights)
+    weights = np.array(weights)
 
     for i in range(len(images)):
         magnitude, phase = get_magnitude_and_phase(images[i])
@@ -62,8 +62,8 @@ image4 = cv2.resize(image4, target_size)
 weights = [1, 1.0, 1.0, 1.0]
 
 # Choose whether to use magnitude or phase for each image
-selected_magnitudes = [True, False, True, False]
-selected_phases = [False, True, False, True]
+selected_magnitudes = [True, False, False, False]
+selected_phases = [True, False, False, False]
 
 # Combine images
 combined_image = combine_images([image1, image2, image3, image4], selected_magnitudes, selected_phases, weights)

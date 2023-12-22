@@ -21,6 +21,7 @@ class ViewOriginal(QGraphicsView):
         self.original_pixmap = None
         self.grayscale_pixmap = None
         self.path = self.path()
+        self.image_viewer = None # ImageViewer object
 
     def resize_pixmap(self, new_width, new_height):
         if self.original_pixmap:
@@ -38,6 +39,20 @@ class ViewOriginal(QGraphicsView):
 
     def mouseMoveEvent(self, event: QMouseEvent):
         # You can capture the mouse position during the drag here
+        self.image_viewer.image_brightness =self.mapToScene(event.pos()).x()/1000
+        self.image_viewer.image_contrast = self.mapToScene(event.pos()).y()/1000
+        image_bytes = self.image_viewer.gray_scale_image_bytes()
+        
+        self.original_pixmap.loadFromData(image_bytes.tobytes())
+        self.resize_pixmap(300, 200)
+
+        if not self.pixmap_item:
+            self.pixmap_item = QGraphicsPixmapItem(self.grayscale_pixmap)
+            self.scene.addItem(self.pixmap_item)
+
+        else:
+            self.pixmap_item.setPixmap(self.grayscale_pixmap)
+
         print("Mouse position during drag:", self.mapToScene(event.pos()))
 
     def openImageDialog(self):
@@ -59,7 +74,12 @@ class ViewOriginal(QGraphicsView):
         return path
 
     def loadImage(self, filename):
-        self.original_pixmap = QPixmap(filename)
+        #self.original_pixmap = QPixmap(filename)
+        self.original_pixmap = QPixmap()
+        self.image_viewer = ImageViewer(filename)
+        image_bytes = self.image_viewer.gray_scale_image_bytes()
+        
+        self.original_pixmap.loadFromData(image_bytes.tobytes())
         self.resize_pixmap(300, 200)
 
         if not self.pixmap_item:
@@ -171,7 +191,6 @@ class ImageViewer():
 
     @property
     def gray_scale_image(self):
-        self._gray_scale_image = cv2.cvtColor(self._original_image, cv2.COLOR_BGR2GRAY)
         return self._gray_scale_image
 
     @property
@@ -265,6 +284,10 @@ class ImageViewer():
     def image_imaginary_part(self):
         self._image_imaginary_part = np.imag(self._image_fft_shift)
         return self._image_imaginary_part
+    def gray_scale_image_bytes(self):
+        _,data = cv2.imencode(img=self.gray_scale_image, ext='.jpeg')
+        return data
+    
 
 class MixImage(object):
     def __init__(self, image1, image2, image3, image4):
