@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import *
 import sys
 from PyQt5.uic import loadUiType
 import cv2
-
+import matplotlib.pyplot as plt
 
 
 class ViewOriginal(QGraphicsView):
@@ -23,15 +23,15 @@ class ViewOriginal(QGraphicsView):
         self.path = self.path()
         self.image_viewer = None # ImageViewer object
 
-    def resize_pixmap(self, new_width, new_height):
-        if self.original_pixmap:
-            self.original_pixmap = self.original_pixmap.scaled(new_width, new_height, Qt.KeepAspectRatio)
-            self.grayscale_pixmap = self.convert_to_grayscale(self.original_pixmap)
+    # def resize_pixmap(self, new_width, new_height):
+    #     if self.original_pixmap:
+    #         self.original_pixmap = self.original_pixmap.scaled(new_width, new_height, Qt.KeepAspectRatio)
+    #         self.grayscale_pixmap = self.convert_to_grayscale(self.original_pixmap)
 
-    def convert_to_grayscale(self, pixmap):
-        image = pixmap.toImage().convertToFormat(QImage.Format_Grayscale8)
-        grayscale_pixmap = QPixmap.fromImage(image)
-        return grayscale_pixmap
+    # def convert_to_grayscale(self, pixmap):
+    #     image = pixmap.toImage().convertToFormat(QImage.Format_Grayscale8)
+    #     grayscale_pixmap = QPixmap.fromImage(image)
+    #     return grayscale_pixmap
 
     def mouseDoubleClickEvent(self, event):
         if event.button() == Qt.LeftButton:
@@ -39,8 +39,8 @@ class ViewOriginal(QGraphicsView):
 
     def mouseMoveEvent(self, event: QMouseEvent):
         # You can capture the mouse position during the drag here
-        brightness = abs(self.mapToScene(event.pos()).x()/1000)
-        contrast = abs(self.mapToScene(event.pos()).y()/500)
+        brightness = abs(self.mapToScene(event.pos()).x()/1000)*2
+        contrast = (self.mapToScene(event.pos()).y()/500)*255
         if brightness <=1 and brightness >=0 :
             self.image_viewer.image_brightness = brightness
         if contrast <= 1 and contrast >=0:
@@ -48,14 +48,14 @@ class ViewOriginal(QGraphicsView):
         image_bytes = self.image_viewer.gray_scale_image_bytes()
         
         self.original_pixmap.loadFromData(image_bytes.tobytes())
-        self.resize_pixmap(300, 200)
+        # self.resize_pixmap(300, 200)
 
         if not self.pixmap_item:
-            self.pixmap_item = QGraphicsPixmapItem(self.grayscale_pixmap)
+            self.pixmap_item = QGraphicsPixmapItem(self.original_pixmap)
             self.scene.addItem(self.pixmap_item)
 
         else:
-            self.pixmap_item.setPixmap(self.grayscale_pixmap)
+            self.pixmap_item.setPixmap(self.original_pixmap)
 
         print("Mouse position during drag:", self.mapToScene(event.pos()))
 
@@ -84,14 +84,14 @@ class ViewOriginal(QGraphicsView):
         image_bytes = self.image_viewer.gray_scale_image_bytes()
         
         self.original_pixmap.loadFromData(image_bytes.tobytes())
-        self.resize_pixmap(300, 200)
+        # self.resize_pixmap(300, 200)
 
         if not self.pixmap_item:
-            self.pixmap_item = QGraphicsPixmapItem(self.grayscale_pixmap)
+            self.pixmap_item = QGraphicsPixmapItem(self.original_pixmap)
             self.scene.addItem(self.pixmap_item)
 
         else:
-            self.pixmap_item.setPixmap(self.grayscale_pixmap)
+            self.pixmap_item.setPixmap(self.original_pixmap)
 
 class ViewWeight(QGraphicsView):
     def __init__(self):
@@ -107,13 +107,27 @@ class ViewWeight(QGraphicsView):
         self.current_pixmap_item =None
         self._current_state = 'm'
         self._current_image = None
-        
-
+        self._current_clipped_image = None
+       
 
         self.drawing_rectangle = False
         self.rectangle_item = None
         self.start_point = None
+        self._rect_x_limits = None
+        self._rect_y_limits = None
 
+    @property
+    def rect_x_limits(self):
+        return self._rect_x_limits
+    @rect_x_limits.setter
+    def rect_x_limits(self,value):
+        self._rect_x_limits = value
+    @property
+    def rect_y_limits(self):
+        return self._rect_y_limits
+    @rect_y_limits.setter
+    def rect_y_limits(self,value):
+        self._rect_y_limits = value
 
     @property
     def current_state(self):
@@ -136,10 +150,13 @@ class ViewWeight(QGraphicsView):
         self.current_pixmap = QPixmap(self.qt_image)
         # self.grayscale_pixmap = self.convert_to_grayscale(self.original_pixmap)
         # self.resized_photo=self.resize_pixmap(300,200)
-        self.resize_pixmap(300,200)
+        # self.resize_pixmap(300,200)
         # self.pixmap_item = QGraphicsPixmapItem(self.grayscale_pixmap)
-        self.current_pixmap_item = QGraphicsPixmapItem(self.current_pixmap)
-        self.scene.addItem(self.current_pixmap_item)
+        if self.current_pixmap_item:
+            self.current_pixmap_item.setPixmap(self.current_pixmap)
+        else:
+            self.current_pixmap_item = QGraphicsPixmapItem(self.current_pixmap)
+            self.scene.addItem(self.current_pixmap_item)
         
     @property
     def current_image(self):
@@ -148,14 +165,25 @@ class ViewWeight(QGraphicsView):
     @current_image.setter
     def current_image(self, value):
         self._current_image = value
+    @property
+    def current_clipped_image(self):
+        clipped_image = np.zeros_like(self.current_image)
+        x_i = self.rect_x_limits[0]
+        x_f = self.rect_x_limits[1]
+        y_i = self.rect_y_limits[0]
+        y_f = self.rect_y_limits[1]
+        clipped_image[y_i:y_f,x_i:x_f] = self.current_image[y_i:y_f,x_i:x_f]
+        self._current_clipped_image = clipped_image
+        return self._current_clipped_image
+    
 
     # def convert_to_grayscale(self, pixmap):
     #     image = pixmap.toImage().convertToFormat(QImage.Format_Grayscale8)
     #     grayscale_pixmap = QPixmap.fromImage(image)
     #     return grayscale_pixmap
 
-    def resize_pixmap(self, new_width, new_height):
-        self.current_pixmap = self.current_pixmap.scaled(new_width, new_height, Qt.KeepAspectRatio)
+    # def resize_pixmap(self, new_width, new_height):
+    #     self.current_pixmap = self.current_pixmap.scaled(new_width, new_height, Qt.KeepAspectRatio)
         # self.grayscale_pixmap = self.convert_to_grayscale(self.original_pixmap)
 
     def convert_cv_to_qt(self, cv_image):
@@ -173,7 +201,9 @@ class ViewWeight(QGraphicsView):
             if self.drawing_rectangle:
                 current_point = self.mapToScene(event.pos())
                 rect = QRectF(self.start_point, current_point).normalized()
-
+                self.rect_x_limits = (int(self.start_point.x()),int(current_point.x()))
+                self.rect_y_limits = (int(self.start_point.y()),int(current_point.y()))
+              
                 if not self.rectangle_item:
                     self.rectangle_item = QGraphicsRectItem(rect)
                     pen = QPen(QColor(Qt.white), 2,
@@ -189,27 +219,29 @@ class ViewWeight(QGraphicsView):
         if self.drawing_rectangle:
             self.drawing_rectangle = False
             self.start_point = None
-
+            # np.savetxt('array2.csv',self.current_clipped_image,delimiter=',',fmt="%d")
+            # np.savetxt('array1.csv',self.current_image,delimiter=',',fmt="%d")
             # Get information about the points inside the rectangle
             # points_in_rectangle = self.get_points_in_rectangle(self.rectangle_item.rect())
             # print("Points inside the rectangle:", points_in_rectangle)
 
-    def get_points_in_rectangle(self, rectangle):
-        # Get the region of interest from the image
-        region_of_interest = self.grayscale_pixmap.toImage().copy(rectangle.toRect()).convertToFormat(QImage.Format_Grayscale8)
-        # Get the pixel values within the rectangle
-        points = []
-        for y in range(region_of_interest.height()):
-            for x in range(region_of_interest.width()):
-                pixel_value = region_of_interest.pixel(x, y)
-                points.append((x + int(rectangle.x()), y + int(rectangle.y()), QColor(pixel_value).getRgb()))
-        #print(pixel_value)
-        return points
+    # def get_points_in_rectangle(self, rectangle):
+    #     # Get the region of interest from the image
+    #     region_of_interest = self.grayscale_pixmap.toImage().copy(rectangle.toRect()).convertToFormat(QImage.Format_Grayscale8)
+    #     # Get the pixel values within the rectangle
+    #     points = []
+    #     for y in range(region_of_interest.height()):
+    #         for x in range(region_of_interest.width()):
+    #             pixel_value = region_of_interest.pixel(x, y)
+    #             points.append((x + int(rectangle.x()), y + int(rectangle.y()), QColor(pixel_value).getRgb()))
+    #     #print(pixel_value)
+    #     return points
+    
 
 class ImageViewer():
     def __init__(self, path):
 
-        self._original_image = cv2.imread(f'{path}')
+        self._original_image = cv2.resize(cv2.imread(f'{path}'),(300,200),cv2.INTER_LINEAR)
         self._gray_scale_image = cv2.cvtColor(self._original_image, cv2.COLOR_BGR2GRAY)
         self._image_size = None
         self._image_brightness = 1 # The common range for alpha is from 0.0 to 2.0. (1 ==> no change)
@@ -225,7 +257,7 @@ class ImageViewer():
         self._equalized_image_phase = self.original_image_phase
         self._image_real_part = None
         self._image_imaginary_part = None
-
+        
 
     @property
     def original_image(self):
@@ -281,7 +313,7 @@ class ImageViewer():
 
     @property
     def original_image_magnitude(self):
-        self._original_image_magnitude = 20 * np.log(np.abs(self.image_fft_shift))
+        self._original_image_magnitude = 20 * np.log10(np.abs(self.image_fft_shift))
         return self._original_image_magnitude
 
     @property
@@ -319,7 +351,7 @@ class ImageViewer():
 
     @property
     def image_real_part(self):
-        self._image_real_part = 20 * np.log(np.real(self._image_fft_shift))
+        self._image_real_part = 20 * np.log10(np.real(self._image_fft_shift))
         return self._image_real_part
 
     @property
