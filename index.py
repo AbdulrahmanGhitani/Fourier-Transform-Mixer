@@ -24,8 +24,11 @@ class MainApp(QWidget, ui):
         self.graphics_view_layout1 = QHBoxLayout(self.graphicsView_original_1)
         self.graphics_view_layout1.addWidget(self.image_1)
         self.graphicsView_original_1.setLayout(self.graphics_view_layout1)
-
-
+        
+        self.states = {'m':'Magnitude',
+                       'p':'Phase',
+                       'r':'Real Part',
+                       'i':'Imaginary Part'}
         # self.image_2 = ImageViewer('images (1).jpeg')
         # self.image_2.image_size = (250, 210)
         # qt_image = self.convert_cv_to_qt(self.image_2.gray_scale_image)
@@ -58,13 +61,23 @@ class MainApp(QWidget, ui):
         # scene.addItem(pixmap_item)
         # self.graphicsView_weight_1.setScene(scene)
 
+        
 
-
-        self.image_w = ViewWeight("images.jpeg")
+        self.image_w = ViewWeight()
         self.graphics_view_layout1 = QHBoxLayout(self.graphicsView_weight_1)
         self.graphics_view_layout1.addWidget(self.image_w)
         self.graphicsView_weight_1.setLayout(self.graphics_view_layout1)
+        
 
+        self.comboBox_1.currentTextChanged.connect(self.state_changed)
+
+    def state_changed(self):
+        state = ''
+        for k in self.states:
+            if self.states[k] == self.comboBox_1.currentText():
+                state =k
+        self.image_w.image = self.image_1.image_viewer
+        self.image_w.current_state = state
     def convert_cv_to_qt(self, cv_image):
         height, width = cv_image.shape
         bytes_per_line = width

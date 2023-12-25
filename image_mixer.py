@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import *
 import sys
 from PyQt5.uic import loadUiType
 import cv2
-from image_mixer import *
+
 
 
 class ViewOriginal(QGraphicsView):
@@ -39,8 +39,12 @@ class ViewOriginal(QGraphicsView):
 
     def mouseMoveEvent(self, event: QMouseEvent):
         # You can capture the mouse position during the drag here
-        self.image_viewer.image_brightness =self.mapToScene(event.pos()).x()/1000
-        self.image_viewer.image_contrast = self.mapToScene(event.pos()).y()/1000
+        brightness = abs(self.mapToScene(event.pos()).x()/1000)
+        contrast = abs(self.mapToScene(event.pos()).y()/500)
+        if brightness <=1 and brightness >=0 :
+            self.image_viewer.image_brightness = brightness
+        if contrast <= 1 and contrast >=0:
+            self.image_viewer.image_contrast = contrast
         image_bytes = self.image_viewer.gray_scale_image_bytes()
         
         self.original_pixmap.loadFromData(image_bytes.tobytes())
@@ -90,31 +94,69 @@ class ViewOriginal(QGraphicsView):
             self.pixmap_item.setPixmap(self.grayscale_pixmap)
 
 class ViewWeight(QGraphicsView):
-    def __init__(self, image_path):
+    def __init__(self):
         super().__init__()
 
         self.scene = QGraphicsScene(self)
         self.setScene(self.scene)
-        self.image = ImageViewer(image_path)
-        self.qt_image = self.convert_cv_to_qt(self.image.original_image_magnitude.astype(np.uint8))
-        self.original_pixmap = QPixmap(self.qt_image)
-        self.grayscale_pixmap = self.convert_to_grayscale(self.original_pixmap)
-        self.resized_photo=self.resize_pixmap(300,200)
-        self.pixmap_item = QGraphicsPixmapItem(self.grayscale_pixmap)
-        self.scene.addItem(self.pixmap_item)
+        self.image = None # image_viewer 
+        self.qt_image = None
+        self.current_pixmap = None
+        # self.grayscale_pixmap = None
+        self.resized_photo=None
+        self.current_pixmap_item =None
+        self._current_state = 'm'
+        self._current_image = None
+        
 
 
         self.drawing_rectangle = False
         self.rectangle_item = None
         self.start_point = None
-    def convert_to_grayscale(self, pixmap):
-        image = pixmap.toImage().convertToFormat(QImage.Format_Grayscale8)
-        grayscale_pixmap = QPixmap.fromImage(image)
-        return grayscale_pixmap
+
+
+    @property
+    def current_state(self):
+        return self._current_state
+    
+    @current_state.setter
+    def current_state(self, value):
+        self._current_state = value
+        if value == 'm':
+            self.current_image = self.image.original_image_magnitude
+        elif value == 'p':
+            self.current_image = self.image.original_image_phase
+        elif value == 'r':
+            self.current_image = self.image.image_real_part
+        elif value == 'i':
+            self.current_image = self.image.image_imaginary_part
+        else:
+            raise ValueError('Invalid state')
+        self.qt_image = self.convert_cv_to_qt(self.current_image.astype(np.uint8))
+        self.current_pixmap = QPixmap(self.qt_image)
+        # self.grayscale_pixmap = self.convert_to_grayscale(self.original_pixmap)
+        # self.resized_photo=self.resize_pixmap(300,200)
+        self.resize_pixmap(300,200)
+        # self.pixmap_item = QGraphicsPixmapItem(self.grayscale_pixmap)
+        self.current_pixmap_item = QGraphicsPixmapItem(self.current_pixmap)
+        self.scene.addItem(self.current_pixmap_item)
+        
+    @property
+    def current_image(self):
+        return self._current_image
+    
+    @current_image.setter
+    def current_image(self, value):
+        self._current_image = value
+
+    # def convert_to_grayscale(self, pixmap):
+    #     image = pixmap.toImage().convertToFormat(QImage.Format_Grayscale8)
+    #     grayscale_pixmap = QPixmap.fromImage(image)
+    #     return grayscale_pixmap
 
     def resize_pixmap(self, new_width, new_height):
-        self.original_pixmap = self.original_pixmap.scaled(new_width, new_height, Qt.KeepAspectRatio)
-        self.grayscale_pixmap = self.convert_to_grayscale(self.original_pixmap)
+        self.current_pixmap = self.current_pixmap.scaled(new_width, new_height, Qt.KeepAspectRatio)
+        # self.grayscale_pixmap = self.convert_to_grayscale(self.original_pixmap)
 
     def convert_cv_to_qt(self, cv_image):
         height, width = cv_image.shape
@@ -122,12 +164,12 @@ class ViewWeight(QGraphicsView):
         qt_image = QImage(cv_image.data.tobytes(), width, height, bytes_per_line, QImage.Format_Grayscale8)
         return QPixmap.fromImage(qt_image)
     def mousePressEvent(self, event):
-        if event.button() == Qt.RightButton:
+        if event.button() == Qt.LeftButton:
             self.start_point = self.mapToScene(event.pos())
             self.drawing_rectangle = True
 
     def mouseMoveEvent(self, event):
-        if event.button() != Qt.RightButton:
+        if event.button() != Qt.LeftButton:
             if self.drawing_rectangle:
                 current_point = self.mapToScene(event.pos())
                 rect = QRectF(self.start_point, current_point).normalized()
@@ -149,7 +191,7 @@ class ViewWeight(QGraphicsView):
             self.start_point = None
 
             # Get information about the points inside the rectangle
-            points_in_rectangle = self.get_points_in_rectangle(self.rectangle_item.rect())
+            # points_in_rectangle = self.get_points_in_rectangle(self.rectangle_item.rect())
             # print("Points inside the rectangle:", points_in_rectangle)
 
     def get_points_in_rectangle(self, rectangle):
@@ -295,6 +337,27 @@ class MixImage(object):
         self._mixed_fft = np.zeros_like(np.fft.fft2(self._input_images[0]), dtype=np.complex128)
         self._mixed_image = None
 
+    @property 
+    def input_images(self):
+        return self._input_images
+    @input_images.setter
+    def input_images(self,value):
+        self._input_images = value
+        
+    @property 
+    def mixed_fft(self):
+        return self._mixed_fft
+    @mixed_fft.setter
+    def mixed_fft(self,value):
+        self._mixed_fft = value
+    @property 
+    def mixed_image(self):
+        return self._mixed_image
+    @mixed_image.setter
+    def mixed_image(self,value):
+        self._mixed_image = value
+
+
     # def customize_images_size(self):
     #     small_size_image = (100000, 100000)
     #     for i in range(4):
@@ -304,12 +367,12 @@ class MixImage(object):
     def mix_images(self):
         for i in range(4):
             weighted_fft = (
-                    self._input_images[i].weight_of_magnitude * np.abs(self._input_images[i].image_fft)
-                    * np.exp(1j * self._input_images[i].weight_of_phase)
+                    self.input_images[i].weight_of_magnitude * np.abs(self.input_images[i].image_fft)
+                    * np.exp(1j * self.input_images[i].weight_of_phase)
             )
             self._mixed_fft += weighted_fft
-        self._mixed_image = np.abs(np.fft.ifft2(self._mixed_fft)).astype(np.uint8)
-        return self._mixed_image
+        self.mixed_image = np.abs(np.fft.ifft2(self._mixed_fft)).astype(np.uint8)
+        return self.mixed_image
 
 
 # image_1 = ImageViewer('images.jpeg')
