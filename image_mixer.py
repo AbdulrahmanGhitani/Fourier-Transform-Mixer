@@ -108,13 +108,28 @@ class ViewWeight(QGraphicsView):
         self._current_state = 'm'
         self._current_image = None
         self._current_clipped_image = None
-       
+        self._weight = 0
 
         self.drawing_rectangle = False
         self.rectangle_item = None
         self.start_point = None
         self._rect_x_limits = None
         self._rect_y_limits = None
+        self._is_captured = False
+
+    @property
+    def is_captured(self):
+        return self._is_captured
+    @is_captured.setter
+    def is_captured(self, value):
+        self._is_captured = value
+
+    @property
+    def weight(self):
+        return self._weight
+    @weight.setter
+    def weight(self,value):
+        self._weight = value
 
     @property
     def rect_x_limits(self):
@@ -195,6 +210,14 @@ class ViewWeight(QGraphicsView):
         if event.button() == Qt.LeftButton:
             self.start_point = self.mapToScene(event.pos())
             self.drawing_rectangle = True
+            self.is_captured = True
+        elif event.button() == Qt.RightButton:
+            self.is_captured = False
+            self.drawing_rectangle = False
+            self.start_point = None
+            self.scene.removeItem(self.rectangle_item)
+            self.rectangle_item = None
+            
 
     def mouseMoveEvent(self, event):
         if event.button() != Qt.LeftButton:
@@ -363,11 +386,19 @@ class ImageViewer():
         return data
     
 
-class MixImage(object):
-    def __init__(self, image1, image2, image3, image4):
-        self._input_images = [image1, image2, image3, image4]
-        self._mixed_fft = np.zeros_like(np.fft.fft2(self._input_images[0]), dtype=np.complex128)
+class ImageMixer(object):
+    def __init__(self, viewWeights: list[ViewWeight]):
+        self._input_images = viewWeights
+        self._mixed_fft = None
         self._mixed_image = None
+        self._mode = 'ap' # amplitude/phase or real/imaginary (ap|ri)
+
+    @property
+    def mode(self):
+        return self._mode
+    @mode.setter
+    def mode(self, value):
+        self._mode = value
 
     @property 
     def input_images(self):
@@ -384,7 +415,13 @@ class MixImage(object):
         self._mixed_fft = value
     @property 
     def mixed_image(self):
+        if self.mode == 'ap' or self.mode == 'ri':
+           self._mixed_image =  self._mix_images(self.mode)
+        else:
+            raise ValueError("Invalid mode")
+        
         return self._mixed_image
+    
     @mixed_image.setter
     def mixed_image(self,value):
         self._mixed_image = value
@@ -396,15 +433,44 @@ class MixImage(object):
     #         if self._input_images[i].image_size < small_size_image
     #             small_size_image = self._input_images[i].image_size
     #     print(small_size_image)
-    def mix_images(self):
-        for i in range(4):
-            weighted_fft = (
-                    self.input_images[i].weight_of_magnitude * np.abs(self.input_images[i].image_fft)
-                    * np.exp(1j * self.input_images[i].weight_of_phase)
-            )
-            self._mixed_fft += weighted_fft
-        self.mixed_image = np.abs(np.fft.ifft2(self._mixed_fft)).astype(np.uint8)
-        return self.mixed_image
+        #     weighted_fft = (
+        #             self.input_images[i].weight_of_magnitude * np.abs(self.input_images[i].image_fft)
+        #             * np.exp(1j * self.input_images[i].weight_of_phase)
+        #     )
+        #     self._mixed_fft += weighted_fft
+        # self.mixed_image = np.abs(np.fft.ifft2(self._mixed_fft)).astype(np.uint8)
+    def _mix_images(self,mode):
+        weighted_phase =  []
+        weighted_magnitude = []
+        weighted_real_part = []
+        weighted_imaginary_part = []
+        for img in self.input_images:
+            weight = img.weight
+            img_component = img.current_clipped_image if img.is_captured else img.current_image
+            img_state = img.current_state
+            weighted_comp = weight * img_component
+            if img_state == 'm' and mode == 'ap': 
+                weighted_magnitude.append(weighted_comp)
+            elif img_state == 'p' and mode =='ap':
+                weighted_phase.append(weighted_comp)
+            elif img_state == 'r' and mode =='ri':
+                weighted_real_part.append(weighted_comp)
+            elif img_state == 'i' and mode =='ri':
+                weighted_imaginary_part.append(weighted_comp)
+            else:
+                continue
+        weighted_fft = 0
+        if mode == 'ap':
+            weighted_magnitude = np.sum(np.array(weighted_magnitude))
+            weighted_phase = np.sum(np.array(weighted_phase))
+            weighted_fft = weighted_magnitude * np.exp(1j * weighted_phase)
+        else:
+            weighted_real_part = np.sum(np.array(weighted_real_part))
+            weighted_imaginary_part = np.sum(np.array(weighted_imaginary_part))
+            weighted_fft = weighted_real_part + weighted_imaginary_part * 1j
+        self.mixed_fft = weighted_fft
+        _mixed_image = np.abs(np.fft.ifft2(self.mixed_fft)).astype(np.uint8)
+        return _mixed_image
 
 
 # image_1 = ImageViewer('images.jpeg')
