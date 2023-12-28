@@ -63,7 +63,7 @@ weights = [1, 1.0, 1.0, 1.0]
 
 # Choose whether to use magnitude or phase for each image
 selected_magnitudes = [True, False, False, False]
-selected_phases = [True, False, False, False]
+selected_phases = [False, True, False, False]
 
 # Combine images
 combined_image = combine_images([image1, image2, image3, image4], selected_magnitudes, selected_phases, weights)

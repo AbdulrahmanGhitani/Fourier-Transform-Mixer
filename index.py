@@ -9,6 +9,13 @@ from image_mixer import *
 ui, _ = loadUiType('main.ui')
 
 
+def convert_cv_to_qt(cv_image):
+    height, width = cv_image.shape
+    bytes_per_line = width
+    qt_image = QImage(cv_image.data.tobytes(), width, height, bytes_per_line, QImage.Format_Grayscale8)
+    return QPixmap.fromImage(qt_image)
+
+
 class MainApp(QWidget, ui):
     _show_hide_flag = True
 
@@ -16,89 +23,116 @@ class MainApp(QWidget, ui):
         super(MainApp, self).__init__(parent)
         QMainWindow.__init__(self)
         self.setupUi(self)
-        self.resize(1450, 900)
+        self.resize(1500, 900)
 
         self.image_1 = ViewOriginal()
-        # self.image_1.mouseMoveEvent(QMouseEvent)
+        self.image_2 = ViewOriginal()
+        self.image_3 = ViewOriginal()
+        self.image_4 = ViewOriginal()
 
-        self.graphics_view_layout1 = QHBoxLayout(self.graphicsView_original_1)
-        self.graphics_view_layout1.addWidget(self.image_1)
-        self.graphicsView_original_1.setLayout(self.graphics_view_layout1)
-        
-        self.states = {'m':'Magnitude',
-                       'p':'Phase',
-                       'r':'Real Part',
-                       'i':'Imaginary Part'}
-        # self.image_2 = ImageViewer('images (1).jpeg')
-        # self.image_2.image_size = (250, 210)
-        # qt_image = self.convert_cv_to_qt(self.image_2.gray_scale_image)
-        # scene = QGraphicsScene(self)
-        # pixmap_item = QGraphicsPixmapItem(qt_image)
-        # scene.addItem(pixmap_item)
-        # self.graphicsView_original_2.setScene(scene)
-        #
-        # self.image_3 = ImageViewer('download.jpeg')
-        # self.image_3.image_size = (250, 210)
-        # qt_image = self.convert_cv_to_qt(self.image_3.gray_scale_image)
-        # scene = QGraphicsScene(self)
-        # pixmap_item = QGraphicsPixmapItem(qt_image)
-        # scene.addItem(pixmap_item)
-        # self.graphicsView_original_3.setScene(scene)
-        #
-        # self.image_4 = ImageViewer('download (1).jpeg')
-        # self.image_4.image_size = (250, 210)
-        # qt_image = self.convert_cv_to_qt(self.image_4.gray_scale_image.astype(np.uint8))
-        # scene = QGraphicsScene(self)
-        # pixmap_item = QGraphicsPixmapItem(qt_image)
-        # scene.addItem(pixmap_item)
-        # self.graphicsView_original_4.setScene(scene)
+        self.image_weight_1 = ViewWeight()
+        self.image_weight_2 = ViewWeight()
+        self.image_weight_3 = ViewWeight()
+        self.image_weight_4 = ViewWeight()
 
-        # self.image_9 = ImageViewer('images (1).jpeg')
-        # self.image_9.original_image_magnitude
-        # qt_image = self.convert_cv_to_qt(self.image_9.original_image_magnitude.astype(np.uint8))
-        # scene = QGraphicsScene(self)
-        # pixmap_item = QGraphicsPixmapItem(qt_image)
-        # scene.addItem(pixmap_item)
-        # self.graphicsView_weight_1.setScene(scene)
+        self.output_image = None
 
-        
+        self.images = [
+            [self.image_1,
+             self.image_2,
+             self.image_3,
+             self.image_4],
 
-        self.image_w = ViewWeight()
-        self.graphics_view_layout1 = QHBoxLayout(self.graphicsView_weight_1)
-        self.graphics_view_layout1.addWidget(self.image_w)
-        self.graphicsView_weight_1.setLayout(self.graphics_view_layout1)
-        
+            [self.image_weight_1,
+             self.image_weight_2,
+             self.image_weight_3,
+             self.image_weight_4],
+        ]
 
-        self.comboBox_1.currentTextChanged.connect(self.state_changed)
+        self.graphics_views = [
+            [self.graphicsView_original_1,
+             self.graphicsView_original_2,
+             self.graphicsView_original_3,
+             self.graphicsView_original_4
+             ],
+            [self.graphicsView_weight_1,
+             self.graphicsView_weight_2,
+             self.graphicsView_weight_3,
+             self.graphicsView_weight_4,
+             ],
+        ]
+
+        self.combo_boxes = [
+            self.comboBox_1,
+            self.comboBox_2,
+            self.comboBox_3,
+            self.comboBox_4,
+        ]
+
+        self.weight_sliders = [
+            self.weight1_slider,
+            self.weight2_slider,
+            self.weight3_slider,
+            self.weight4_slider,
+        ]
+
+        self.mix_graphics_views = [
+            self.graphicsView_mix_1,
+            self.graphicsView_mix_2,
+        ]
+
+        for i, graphics_view_list in enumerate(self.graphics_views):
+            for j, graphics_view in enumerate(graphics_view_list):
+                graphics_view_layout = QHBoxLayout(graphics_view)
+                graphics_view_layout.addWidget(self.images[i][j])
+                graphics_view.setLayout(graphics_view_layout)
+
+        self.states = {'m': 'Magnitude',
+                       'p': 'Phase',
+                       'r': 'Real Part',
+                       'i': 'Imaginary Part'}
+
+        self.mix_mode = "mp"
+        self.current_mix_graphics_view = self.graphicsView_mix_1
+
+        for combo_box in self.combo_boxes:
+            combo_box.currentTextChanged.connect(self.state_changed)
+
+        for slider in self.weight_sliders:
+            slider.valueChanged.connect(self.change_weight)
+
+        self.mix_btn.clicked.connect(self.mix)
+        self.m_p_radioButton.toggled.connect(self.toggle_mode)
 
     def state_changed(self):
+        i = self.combo_boxes.index(self.sender())
         state = ''
         for k in self.states:
-            if self.states[k] == self.comboBox_1.currentText():
-                state =k
-        self.image_w.image = self.image_1.image_viewer
-        self.image_w.current_state = state
-    def convert_cv_to_qt(self, cv_image):
-        height, width = cv_image.shape
-        bytes_per_line = width
-        qt_image = QImage(cv_image.data.tobytes(), width, height, bytes_per_line, QImage.Format_Grayscale8)
-        return QPixmap.fromImage(qt_image)
-    # def weights(self):
-    #     path1=self.image_1.path()
-    #     # print(path1)
-    #     self.image_w = ViewWeight(path1)
-    #     self.graphics_view_layout1 = QHBoxLayout(self.graphicsView_weight_1)
-    #     self.graphics_view_layout1.addWidget(self.image_w)
-    #     self.graphicsView_weight_1.setLayout(self.graphics_view_layout1)
+            if self.states[k] == self.sender().currentText():
+                state = k
+        self.images[1][i].image = self.images[0][i].image_viewer
+        self.images[1][i].current_state = state
 
-        # self.graphicsView_7 = CustomGraphicsView(self.graphicsView_7, self)
+    def change_weight(self):
+        i = self.weight_sliders.index(self.sender())
+        value = self.sender().value()
+        self.images[1][i].weight = value / 100
 
-        # image_path = 'download.jpeg'
-        # scene = QGraphicsScene(self)
-        # pixmap = QPixmap(image_path)
-        # item = QGraphicsPixmapItem(pixmap)
-        # scene.addItem(item)
-        # self.graphicsView_7.setScene(scene)
+    def mix(self):
+        self.output_image = ImageMixer(self.images[1])
+        self.output_image.mode = self.mix_mode
+        self.graphics_view_layout = QHBoxLayout(self.mix_graphics_views[0])
+        self.graphics_view_layout.addWidget(self.output_image)
+        self.mix_graphics_views[0].setLayout(self.graphics_view_layout)
+
+    def toggle_mode(self):
+        if self.m_p_radioButton.isChecked():
+            self.mix_mode = "mp"
+        else:
+            self.mix_mode = "ri"
+
+    def toggle_region(self):
+        pass
 
 
 def main():
@@ -110,144 +144,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-
-
-
-
-
-
-
-class BrightnessContrastGraphicsView(QGraphicsView):
-    def __init__(self, image_path):
-        super().__init__()
-
-
-
-        self.scene = QGraphicsScene(self)
-        self.setScene(self.scene)
-        self.original_pixmap = QPixmap(image_path)
-        self.grayscale_pixmap = self.convert_to_grayscale(self.original_pixmap)
-        self.pixmap_item = QGraphicsPixmapItem(self.grayscale_pixmap)
-        self.scene.addItem(self.pixmap_item)
-
-        self.drawing_rectangle = False
-        self.rectangle_item = None
-        self.start_point = None
-    def convert_to_grayscale(self, pixmap):
-        image = pixmap.toImage().convertToFormat(QImage.Format_Grayscale8)
-        grayscale_pixmap = QPixmap.fromImage(image)
-        return grayscale_pixmap
-
-    def mouseMoveEvent(self, event: QMouseEvent):
-        # You can capture the mouse position during the drag here
-        print("Mouse position during drag:", self.mapToScene(event.pos()))
-    def mousePressEvent(self, event):
-        if event.button() == Qt.RightButton:
-            self.start_point = self.mapToScene(event.pos())
-            self.drawing_rectangle = True
-
-    def mouseMoveEvent(self, event):
-        if event.button() != Qt.RightButton:
-            if self.drawing_rectangle:
-                current_point =self.mapToScene(event.pos())
-                rect = QRectF(self.start_point, current_point).normalized()
-                
-                if not self.rectangle_item:
-                    self.rectangle_item = QGraphicsRectItem(rect)
-                    pen = QPen(QColor(Qt.white), 2,
-                               Qt.DashLine)  # You can use Qt.DashLine or Qt.DotLine for a dashed or dotted line
-                    self.rectangle_item.setPen(pen)
-                    self.scene.addItem(self.rectangle_item)
-                else:
-                    self.rectangle_item.setRect(rect)
-        else:
-            print("Mouse position during drag:", self.mapToScene(event.pos()))
-
-    def mouseReleaseEvent(self, event):
-        if self.drawing_rectangle:
-            self.drawing_rectangle = False
-            self.start_point = None
-
-
-class CustomGraphicsView(QGraphicsView):
-    def __init__(self, graphics_view, parent=None):
-        super(CustomGraphicsView, self).__init__(parent)
-        self.graphics_view = graphics_view
-        self.setup_graphics_view()
-
-        self.rubber_band = QRubberBand(QRubberBand.Rectangle, self)
-        self.origin = QPoint()
-
-        # Additional attributes for drawing rectangles
-        self.drawing_rectangle = False
-        self.start_point = None
-        self.rectangle_item = None
-
-    def setup_graphics_view(self):
-        image_path = 'download.jpeg'
-        scene = QGraphicsScene(self)
-        pixmap = QPixmap(image_path)
-        item = QGraphicsPixmapItem(pixmap)
-        scene.addItem(item)
-        self.graphics_view.setScene(scene)
-
-    def mousePressEvent(self, event):
-        if event.button() == Qt.LeftButton:
-        
-            self.origin =self.mapToScene(event.pos())
-            self.rubber_band.setGeometry(QRect(self.origin, QSize()))
-            self.rubber_band.show()
-
-            # Start drawing a rectangle
-            self.drawing_rectangle = True
-            self.start_point = self.mapToScene(event.pos())
-
-    def mouseMoveEvent(self, event):
-        if not self.origin.isNull():
-            self.rubber_band.setGeometry(QRect(self.origin, self.mapToScene(event.pos())).normalized())
-
-        if self.drawing_rectangle:
-            current_point = self.mapToScene(event.pos())
-            rect = QRectF(self.start_point, current_point).normalized()
-            
-            if not self.rectangle_item:
-                self.rectangle_item = QGraphicsRectItem(rect)
-                self.rectangle_item.setPen(QColor(Qt.blue))
-                self.scene().addItem(self.rectangle_item)
-            else:
-                self.rectangle_item.setRect(rect)
-
-    def mouseReleaseEvent(self, event):
-        if event.button() == Qt.LeftButton:
-            rect = self.rubber_band.geometry()
-            selected_region = self.mapToScene(rect).boundingRect()
-            print("Selected Region:", selected_region)
-
-
-            # Get information about the points inside the rectangle
-            points_in_rectangle = self.get_points_in_rectangle(self.rectangle_item.rect())
-            print("Points inside the rectangle:", points_in_rectangle)
-
-    def get_points_in_rectangle(self, rectangle):
-        # Get the region of interest from the image
-        region_of_interest = self.grayscale_pixmap.toImage().copy(rectangle.toRect()).convertToFormat(QImage.Format_Grayscale8)
-        # Get the pixel values within the rectangle
-        points = []
-        for y in range(region_of_interest.height()):
-            for x in range(region_of_interest.width()):
-                pixel_value = region_of_interest.pixel(x, y)
-                points.append((x + int(rectangle.x()), y + int(rectangle.y()), QColor(pixel_value).getRgb()))
-
-        return points
-
-
-        # Reset drawing variables
-        self.drawing_rectangle = False
-        self.start_point = None
-        self.rectangle_item = None
-
-    def get_points_in_rectangle(self, rect):
-        # Implement your logic to obtain indices or points inside the rectangle here
-        # For now, returning a dummy result
-        return "Not implemented yet"
