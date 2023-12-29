@@ -140,21 +140,22 @@ class MainApp(QWidget, ui):
         print(self.images[1][i].weight)
 
     def mix(self):
-
+        for i in range(4):
+            if self.images[1][i].current_image is None:
+                return
         self.output_image = ImageMixer(self.images[1])
-    
         self.output_image.mode = self.mix_mode
-     
         c = self.output_image.mixed_image
+
         
 
-        plt.imshow(c, cmap='gray')
-        plt.title('Combined Image')
-        plt.show()
-        # self.graphicsView_mix_1.scene.addItem(self.mixed_image)
+        # plt.imshow(c, cmap='gray')
+        # plt.title('Combined Image')
+        # plt.show()
+
 
         # self.graphics_view_layout = QHBoxLayout(self.mix_graphics_views[0])
-        # self.graphics_view_layout.addWidget(self.mixed_image)
+        # self.graphics_view_layout.addWidget(c)
         # self.mix_graphics_views[0].setLayout(self.graphics_view_layout)
 
     def toggle_region(self):
