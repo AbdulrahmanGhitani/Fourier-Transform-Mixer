@@ -7,6 +7,12 @@ import sys
 from PyQt5.uic import loadUiType
 import cv2
 import matplotlib.pyplot as plt
+import logging
+logging.basicConfig(filename="our_app.log",
+                    filemode="a",
+                    format="(%(asctime)s) | %(name)s | %(levelname)s : '%(message)s' ",
+                    datefmt="%d %B %Y, %H:%M")
+mixer_logger = logging.getLogger("image_mixer.py")
 
 
 class ViewOriginal(QGraphicsView):
@@ -100,6 +106,7 @@ class ViewWeight(QGraphicsView):
         self._current_image = None
         self._current_clipped_image = None
         self._weight = 0
+        self._is_outer_region = False
 
         self.drawing_rectangle = False
         self.rectangle_item = None
@@ -108,6 +115,13 @@ class ViewWeight(QGraphicsView):
         self._rect_y_limits = None
         self._is_captured = False
 
+    @property
+    def is_outer_region(self):
+        return self._is_outer_region
+
+    @is_outer_region.setter
+    def is_outer_region(self, value):
+        self._is_outer_region = value
     @property
     def is_captured(self):
         return self._is_captured
@@ -175,12 +189,16 @@ class ViewWeight(QGraphicsView):
 
     @property
     def current_clipped_image(self):
-        clipped_image = np.zeros_like(self.current_image)
         x_i = self.rect_x_limits[0]
         x_f = self.rect_x_limits[1]
         y_i = self.rect_y_limits[0]
         y_f = self.rect_y_limits[1]
-        clipped_image[y_i:y_f, x_i:x_f] = self.current_image[y_i:y_f, x_i:x_f]
+        if self.is_outer_region:
+            clipped_image = self.current_image.copy()
+            clipped_image[y_i:y_f, x_i:x_f] = np.zeros_like(self.current_image[y_i:y_f, x_i:x_f])
+        else:
+            clipped_image = np.zeros_like(self.current_image)
+            clipped_image[y_i:y_f, x_i:x_f] = self.current_image[y_i:y_f, x_i:x_f]
         self._current_clipped_image = clipped_image
         return self._current_clipped_image
 

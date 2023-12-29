@@ -1,3 +1,5 @@
+import logging
+
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
@@ -5,6 +7,8 @@ import sys
 from PyQt5.uic import loadUiType
 import cv2
 from image_mixer import *
+
+index_logger = logging.getLogger("index.py")
 
 ui, _ = loadUiType('main.ui')
 
@@ -75,6 +79,12 @@ class MainApp(QWidget, ui):
             self.weight3_slider,
             self.weight4_slider,
         ]
+        self.outer_region_checkBoxs =[
+            self.checkBox_1,
+            self.checkBox_2,
+            self.checkBox_3,
+            self.checkBox_4
+        ]
 
         self.mix_graphics_views = [
             self.graphicsView_mix_1,
@@ -101,29 +111,55 @@ class MainApp(QWidget, ui):
         for slider in self.weight_sliders:
             slider.valueChanged.connect(self.change_weight)
 
+        for checkBox in self.outer_region_checkBoxs:
+            checkBox.toggled.connect(self.toggle_region)
+
         self.mix_btn.clicked.connect(self.mix)
         self.m_p_radioButton.toggled.connect(self.toggle_mode)
 
     def state_changed(self):
-        i = self.combo_boxes.index(self.sender())
-        state = ''
-        for k in self.states:
-            if self.states[k] == self.sender().currentText():
-                state = k
-        self.images[1][i].image = self.images[0][i].image_viewer
-        self.images[1][i].current_state = state
+        if self.sender().currentText() != "Choose":
+            i = self.combo_boxes.index(self.sender())
+            if self.images[0][i].image_viewer is None:
+                QMessageBox.critical(None, "Error", "Double click to open the image first", QMessageBox.Ok)
+                self.sender().setCurrentIndex(0)
+
+            else:
+                state = ''
+                for k in self.states:
+                    if self.states[k] == self.sender().currentText():
+                        state = k
+                self.images[1][i].image = self.images[0][i].image_viewer
+                self.images[1][i].current_state = state
 
     def change_weight(self):
         i = self.weight_sliders.index(self.sender())
         value = self.sender().value()
         self.images[1][i].weight = value / 100
+        print(self.images[1][i].weight)
 
     def mix(self):
+
         self.output_image = ImageMixer(self.images[1])
+        print("1")
         self.output_image.mode = self.mix_mode
-        self.graphics_view_layout = QHBoxLayout(self.mix_graphics_views[0])
-        self.graphics_view_layout.addWidget(self.output_image)
-        self.mix_graphics_views[0].setLayout(self.graphics_view_layout)
+        print("2")
+        c = self.output_image.mixed_image
+        print("3")
+
+
+        # self.graphicsView_mix_1.scene.addItem(self.mixed_image)
+
+        # self.graphics_view_layout = QHBoxLayout(self.mix_graphics_views[0])
+        # self.graphics_view_layout.addWidget(self.mixed_image)
+        # self.mix_graphics_views[0].setLayout(self.graphics_view_layout)
+
+    def toggle_region(self):
+        i = self.outer_region_checkBoxs.index(self.sender())
+        if self.sender().isChecked():
+            self.images[1][i].is_outer_region = True
+        else:
+            self.images[1][i].is_outer_region = False
 
     def toggle_mode(self):
         if self.m_p_radioButton.isChecked():
@@ -131,8 +167,8 @@ class MainApp(QWidget, ui):
         else:
             self.mix_mode = "ri"
 
-    def toggle_region(self):
-        pass
+
+
 
 
 def main():
