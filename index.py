@@ -6,6 +6,7 @@ from PyQt5.QtWidgets import *
 import sys
 from PyQt5.uic import loadUiType
 import cv2
+import matplotlib.pyplot as plt
 from image_mixer import *
 
 index_logger = logging.getLogger("index.py")
@@ -141,13 +142,15 @@ class MainApp(QWidget, ui):
     def mix(self):
 
         self.output_image = ImageMixer(self.images[1])
-        print("1")
+    
         self.output_image.mode = self.mix_mode
-        print("2")
+     
         c = self.output_image.mixed_image
-        print("3")
+        
 
-
+        plt.imshow(c, cmap='gray')
+        plt.title('Combined Image')
+        plt.show()
         # self.graphicsView_mix_1.scene.addItem(self.mixed_image)
 
         # self.graphics_view_layout = QHBoxLayout(self.mix_graphics_views[0])

@@ -8,6 +8,7 @@ from PyQt5.uic import loadUiType
 import cv2
 import matplotlib.pyplot as plt
 import logging
+from threading import Thread
 logging.basicConfig(filename="our_app.log",
                     filemode="a",
                     format="(%(asctime)s) | %(name)s | %(levelname)s : '%(message)s' ",
@@ -105,7 +106,7 @@ class ViewWeight(QGraphicsView):
         self._current_state = 'm'
         self._current_image = None
         self._current_clipped_image = None
-        self._weight = 0
+        self._weight = 1
         self._is_outer_region = False
 
         self.drawing_rectangle = False
@@ -171,7 +172,7 @@ class ViewWeight(QGraphicsView):
             self.current_image = self.image.image_imaginary_part
         else:
             raise ValueError('Invalid state')
-        self.qt_image = self.convert_cv_to_qt(self.current_image.astype(np.uint8))
+        self.qt_image = self.convert_cv_to_qt((20*np.log10(self.current_image)).astype(np.uint8))
         self.current_pixmap = QPixmap(self.qt_image)
         if self.current_pixmap_item:
             self.current_pixmap_item.setPixmap(self.current_pixmap)
@@ -319,7 +320,7 @@ class ImageViewer():
 
     @property
     def original_image_magnitude(self):
-        self._original_image_magnitude = 20 * np.log10(np.abs(self.image_fft_shift))
+        self._original_image_magnitude = np.abs(self.image_fft_shift)
         return self._original_image_magnitude
 
     @property
@@ -355,7 +356,7 @@ class ImageViewer():
 
     @property
     def image_real_part(self):
-        self._image_real_part = 20 * np.log10(np.real(self._image_fft_shift))
+        self._image_real_part = np.real(self._image_fft_shift)
         return self._image_real_part
 
     @property
@@ -374,7 +375,7 @@ class ImageMixer(object):
         self._mixed_fft = None
         self._mixed_image = None
         self._mode = 'mp'  # magnitude/phase or real/imaginary (mp|ri)
-
+    
     @property
     def mode(self):
         return self._mode
@@ -434,13 +435,14 @@ class ImageMixer(object):
                 continue
         weighted_fft = 0
         if mode == 'mp':
-            weighted_magnitude = np.sum(np.array(weighted_magnitude))
-            weighted_phase = np.sum(np.array(weighted_phase))
+            weighted_magnitude = np.sum(np.array(weighted_magnitude),axis=0)
+            weighted_phase = np.sum(np.array(weighted_phase),axis=0)
             weighted_fft = weighted_magnitude * np.exp(1j * weighted_phase)
         else:
-            weighted_real_part = np.sum(np.array(weighted_real_part))
-            weighted_imaginary_part = np.sum(np.array(weighted_imaginary_part))
+            weighted_real_part = np.sum(np.array(weighted_real_part),axis=0)
+            weighted_imaginary_part = np.sum(np.array(weighted_imaginary_part),axis=0)
             weighted_fft = weighted_real_part + weighted_imaginary_part * 1j
         self.mixed_fft = weighted_fft
         _mixed_image = np.abs(np.fft.ifft2(self.mixed_fft)).astype(np.uint8)
+        
         return _mixed_image
