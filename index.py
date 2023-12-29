@@ -106,6 +106,13 @@ class MainApp(QWidget, ui):
         self.mix_mode = "mp"
         self.current_mix_graphics_view = self.graphicsView_mix_1
 
+
+        #create scene and pixmap_item for mix_graphics_view1
+        self.scene1 = QGraphicsScene(self.graphicsView_mix_1)
+        self.scene1_pixmap_item = QGraphicsPixmapItem()
+        self.graphicsView_mix_1.setScene(self.scene1)
+        self.scene1.addItem(self.scene1_pixmap_item)
+
         for combo_box in self.combo_boxes:
             combo_box.currentTextChanged.connect(self.state_changed)
 
@@ -145,13 +152,11 @@ class MainApp(QWidget, ui):
                 return
         self.output_image = ImageMixer(self.images[1])
         self.output_image.mode = self.mix_mode
-        c = self.output_image.mixed_image
-
+        qt_image = self.convert_cv_to_qt(self.output_image.mixed_image)
+        pixmap = QPixmap(qt_image)
+        self.scene1_pixmap_item.setPixmap(pixmap)
         
-
-        # plt.imshow(c, cmap='gray')
-        # plt.title('Combined Image')
-        # plt.show()
+        
 
 
         # self.graphics_view_layout = QHBoxLayout(self.mix_graphics_views[0])
@@ -171,6 +176,11 @@ class MainApp(QWidget, ui):
         else:
             self.mix_mode = "ri"
 
+    def convert_cv_to_qt(self, cv_image):
+        height, width = cv_image.shape
+        bytes_per_line = width
+        qt_image = QImage(cv_image.data.tobytes(), width, height, bytes_per_line, QImage.Format_Grayscale8)
+        return QPixmap.fromImage(qt_image)
 
 
 
