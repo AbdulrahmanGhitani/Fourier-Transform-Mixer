@@ -444,5 +444,6 @@ class ImageMixer(object):
             weighted_fft = weighted_real_part + weighted_imaginary_part * 1j
         self.mixed_fft = weighted_fft
         _mixed_image = np.abs(np.fft.ifft2(self.mixed_fft)).astype(np.uint8)
-        
+        _mixed_image = cv2.resize(_mixed_image,(300,300), cv2.INTER_LINEAR)
+
         return _mixed_image
