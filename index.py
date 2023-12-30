@@ -88,8 +88,12 @@ class MainApp(QWidget, ui):
         ]
 
         self.mix_graphics_views = [
-            self.graphicsView_mix_1,
             self.graphicsView_mix_2,
+            self.graphicsView_mix_1
+        ]
+        self.progress_bars = [
+            self.progressBar_mix_2,
+            self.progressBar_mix_1
         ]
 
         for i, graphics_view_list in enumerate(self.graphics_views):
@@ -104,14 +108,10 @@ class MainApp(QWidget, ui):
                        'i': 'Imaginary Part'}
 
         self.mix_mode = "mp"
-        self.current_mix_graphics_view = self.graphicsView_mix_1
+        self.mix_graphics_view_index = 0
 
 
-        #create scene and pixmap_item for mix_graphics_view1
-        self.scene1 = QGraphicsScene(self.graphicsView_mix_1)
-        self.scene1_pixmap_item = QGraphicsPixmapItem()
-        self.graphicsView_mix_1.setScene(self.scene1)
-        self.scene1.addItem(self.scene1_pixmap_item)
+
 
         for combo_box in self.combo_boxes:
             combo_box.currentTextChanged.connect(self.state_changed)
@@ -125,6 +125,33 @@ class MainApp(QWidget, ui):
         self.mix_btn.clicked.connect(self.mix)
         self.m_p_radioButton.toggled.connect(self.toggle_mode)
 
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.updateProgress)
+
+        self.progressValue = 0
+
+    def startProgress(self):
+        # Set the duration in seconds (0.1 seconds in this case)
+        duration = 0.1
+
+        # Calculate the interval based on the duration and desired steps
+        steps = 100  # Number of steps
+        interval = int((duration * 1000) / steps)
+
+        self.progressValue = 0
+        self.progress_bars[self.mix_graphics_view_index].setValue(0)
+
+        # Start the timer with the calculated interval
+        self.timer.start(interval)
+
+    def updateProgress(self):
+        # Update the progress value
+        self.progressValue += 1
+        self.progress_bars[self.mix_graphics_view_index].setValue(self.progressValue)
+
+        # Check if the progress is complete
+        if self.progressValue >= 100:
+            self.timer.stop()
     def state_changed(self):
         if self.sender().currentText() != "Choose":
             i = self.combo_boxes.index(self.sender())
@@ -147,21 +174,26 @@ class MainApp(QWidget, ui):
         print(self.images[1][i].weight)
 
     def mix(self):
+
         for i in range(4):
             if self.images[1][i].current_image is None:
                 return
         self.output_image = ImageMixer(self.images[1])
         self.output_image.mode = self.mix_mode
+
+        self.mix_graphics_view_index = int(self.activate_radioButton_1.isChecked())
+
+        self.startProgress()
+
+        scene = QGraphicsScene(self.mix_graphics_views[self.mix_graphics_view_index])
+        scene_pixmap_item = QGraphicsPixmapItem()
+        self.mix_graphics_views[self.mix_graphics_view_index].setScene(scene)
+        scene.addItem(scene_pixmap_item)
+
         qt_image = self.convert_cv_to_qt(self.output_image.mixed_image)
         pixmap = QPixmap(qt_image)
-        self.scene1_pixmap_item.setPixmap(pixmap)
-        
-        
+        scene_pixmap_item.setPixmap(pixmap)
 
-
-        # self.graphics_view_layout = QHBoxLayout(self.mix_graphics_views[0])
-        # self.graphics_view_layout.addWidget(c)
-        # self.mix_graphics_views[0].setLayout(self.graphics_view_layout)
 
     def toggle_region(self):
         i = self.outer_region_checkBoxs.index(self.sender())
