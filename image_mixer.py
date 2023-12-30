@@ -9,10 +9,8 @@ import cv2
 import matplotlib.pyplot as plt
 import logging
 from threading import Thread
-logging.basicConfig(filename="our_app.log",
-                    filemode="a",
-                    format="(%(asctime)s) | %(name)s | %(levelname)s : '%(message)s' ",
-                    datefmt="%d %B %Y, %H:%M")
+
+
 mixer_logger = logging.getLogger("image_mixer.py")
 
 
@@ -29,6 +27,7 @@ class ViewOriginal(QGraphicsView):
         self.grayscale_pixmap = None
         self.path = self.path()
         self.image_viewer = None  # ImageViewer object
+        mixer_logger.info("Initialize ViewOriginal class")
 
     def mouseDoubleClickEvent(self, event):
         if event.button() == Qt.LeftButton:
@@ -54,7 +53,7 @@ class ViewOriginal(QGraphicsView):
         else:
             self.pixmap_item.setPixmap(self.original_pixmap)
 
-        print("Mouse position during drag:", self.mapToScene(event.pos()))
+        # print("Mouse position during drag:", self.mapToScene(event.pos()))
 
     def openImageDialog(self):
         options = QFileDialog.Options()
@@ -65,13 +64,12 @@ class ViewOriginal(QGraphicsView):
         if fileName:
             self.loadImage(fileName)
             self.imageSelected.emit(fileName)  # Emit the filename
-            print(fileName)
+            mixer_logger.info(f"The user open {fileName}")
 
             return fileName
 
     def path(self):
         path = self.openImageDialog
-        # print(path)
         return path
 
     def loadImage(self, filename):
@@ -81,7 +79,6 @@ class ViewOriginal(QGraphicsView):
         image_bytes = self.image_viewer.gray_scale_image_bytes()
 
         self.original_pixmap.loadFromData(image_bytes.tobytes())
-        # self.resize_pixmap(300, 200)
 
         if not self.pixmap_item:
             self.pixmap_item = QGraphicsPixmapItem(self.original_pixmap)
@@ -115,6 +112,7 @@ class ViewWeight(QGraphicsView):
         self._rect_x_limits = None
         self._rect_y_limits = None
         self._is_captured = False
+        mixer_logger.info("Initialize VeiwWeight class")
 
     @property
     def is_outer_region(self):
@@ -171,7 +169,8 @@ class ViewWeight(QGraphicsView):
         elif value == 'i':
             self.current_image = self.image.image_imaginary_part
         else:
-            raise ValueError('Invalid state')
+            mixer_logger.error("Invalid weight state")
+
         self.qt_image = self.convert_cv_to_qt((20*np.log10(self.current_image)).astype(np.uint8))
         self.current_pixmap = QPixmap(self.qt_image)
         if self.current_pixmap_item:
@@ -197,10 +196,13 @@ class ViewWeight(QGraphicsView):
         if self.is_outer_region:
             clipped_image = self.current_image.copy()
             clipped_image[y_i:y_f, x_i:x_f] = np.zeros_like(self.current_image[y_i:y_f, x_i:x_f])
+            mixer_logger.info("Outer clipped image done")
         else:
             clipped_image = np.zeros_like(self.current_image)
             clipped_image[y_i:y_f, x_i:x_f] = self.current_image[y_i:y_f, x_i:x_f]
+            mixer_logger.info("Inner clipped image done")
         self._current_clipped_image = clipped_image
+
         return self._current_clipped_image
 
     def convert_cv_to_qt(self, cv_image):
@@ -265,6 +267,7 @@ class ImageViewer():
         self._equalized_image_phase = self.original_image_phase
         self._image_real_part = None
         self._image_imaginary_part = None
+        mixer_logger.info("Initialize ImageMixer class")
 
     @property
     def original_image(self):
@@ -414,6 +417,8 @@ class ImageMixer(object):
         self._mixed_image = value
 
     def _mix_images(self, mode):
+        #we use logging to detect (axis=0)
+        mixer_logger.debug("Enter mix_images function")
         weighted_phase = []
         weighted_magnitude = []
         weighted_real_part = []
@@ -435,6 +440,7 @@ class ImageMixer(object):
                 continue
         weighted_fft = 0
         if mode == 'mp':
+            mixer_logger.debug("Enter if(mode == 'mp') at mix_images function")
             weighted_magnitude = np.sum(np.array(weighted_magnitude),axis=0)
             weighted_phase = np.sum(np.array(weighted_phase),axis=0)
             weighted_fft = weighted_magnitude * np.exp(1j * weighted_phase)
@@ -444,6 +450,7 @@ class ImageMixer(object):
             weighted_fft = weighted_real_part + weighted_imaginary_part * 1j
         self.mixed_fft = weighted_fft
         _mixed_image = np.abs(np.fft.ifft2(self.mixed_fft)).astype(np.uint8)
+        mixer_logger.debug("calculate inverse fft for mix_images function")
         _mixed_image = cv2.resize(_mixed_image,(500, 270), cv2.INTER_LINEAR)
 
         return _mixed_image

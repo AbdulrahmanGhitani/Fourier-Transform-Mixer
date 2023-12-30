@@ -131,25 +131,19 @@ class MainApp(QWidget, ui):
         self.progressValue = 0
 
     def startProgress(self):
-        # Set the duration in seconds (0.1 seconds in this case)
         duration = 0.1
-
-        # Calculate the interval based on the duration and desired steps
-        steps = 100  # Number of steps
+        steps = 100
         interval = int((duration * 1000) / steps)
 
         self.progressValue = 0
         self.progress_bars[self.mix_graphics_view_index].setValue(0)
 
-        # Start the timer with the calculated interval
         self.timer.start(interval)
 
     def updateProgress(self):
-        # Update the progress value
         self.progressValue += 1
         self.progress_bars[self.mix_graphics_view_index].setValue(self.progressValue)
 
-        # Check if the progress is complete
         if self.progressValue >= 100:
             self.timer.stop()
     def state_changed(self):
@@ -166,15 +160,16 @@ class MainApp(QWidget, ui):
                         state = k
                 self.images[1][i].image = self.images[0][i].image_viewer
                 self.images[1][i].current_state = state
+        else:
+            index_logger.warning("User choose (Choose)")
 
     def change_weight(self):
         i = self.weight_sliders.index(self.sender())
         value = self.sender().value()
         self.images[1][i].weight = value / 100
-        print(self.images[1][i].weight)
+
 
     def mix(self):
-
         for i in range(4):
             if self.images[1][i].current_image is None:
                 return
@@ -198,6 +193,7 @@ class MainApp(QWidget, ui):
     def toggle_region(self):
         i = self.outer_region_checkBoxs.index(self.sender())
         if self.sender().isChecked():
+            index_logger.debug("outer region is: ", self.sender().isChecked)
             self.images[1][i].is_outer_region = True
         else:
             self.images[1][i].is_outer_region = False
@@ -218,10 +214,16 @@ class MainApp(QWidget, ui):
 
 
 def main():
+    logging.basicConfig(filename="our_app.log",
+                        filemode="a",
+                        format="(%(asctime)s) | %(name)s | %(levelname)s : '%(message)s' ",
+                        datefmt="%d %B %Y, %H:%M",
+                        level=logging.DEBUG)
     app = QApplication(sys.argv)
     window = MainApp()
     window.show()
     app.exec_()
+
 
 
 if __name__ == '__main__':
