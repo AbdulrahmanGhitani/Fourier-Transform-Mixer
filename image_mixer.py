@@ -377,12 +377,14 @@ class ImageViewer():
         return data
 
 
-class ImageMixer(object):
+class ImageMixer(Thread):
     def __init__(self, viewWeights: list[ViewWeight]):
+        Thread.__init__(self)
         self._input_images = viewWeights
         self._mixed_fft = None
         self._mixed_image = None
         self._mode = 'mp'  # magnitude/phase or real/imaginary (mp|ri)
+        self.run()
     
     @property
     def mode(self):
@@ -460,3 +462,5 @@ class ImageMixer(object):
         _mixed_image = cv2.resize(_mixed_image,(500, 270), cv2.INTER_LINEAR)
 
         return _mixed_image
+    def run(self):
+        pass
