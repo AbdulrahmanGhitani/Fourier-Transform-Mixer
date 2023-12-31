@@ -43,7 +43,8 @@ class ViewOriginal(QGraphicsView):
             if contrast <= 1 and contrast >= 0:
                 self.image_viewer.image_contrast = contrast
             image_bytes = self.image_viewer.gray_scale_image_bytes()
-
+            # plt.imshow(self.image_viewer.gray_scale_image)
+            # plt.show()
             self.original_pixmap.loadFromData(image_bytes.tobytes())
             # self.resize_pixmap(300, 200)
 
@@ -78,7 +79,7 @@ class ViewOriginal(QGraphicsView):
         self.original_pixmap = QPixmap()
         self.image_viewer = ImageViewer(filename)
         image_bytes = self.image_viewer.gray_scale_image_bytes()
-
+        
         self.original_pixmap.loadFromData(image_bytes.tobytes())
 
         if not self.pixmap_item:
@@ -297,8 +298,9 @@ class ImageViewer():
     def image_contrast(self, value):
         if -255 <= value <= 255:
             self._image_contrast = value
-            self._gray_scale_image = cv2.convertScaleAbs(self._original_image, alpha=self.image_brightness,
-                                                         beta=self.image_contrast)
+            self._gray_scale_image = cv2.cvtColor(cv2.convertScaleAbs(self._original_image, alpha=self.image_brightness,
+                                                         beta=self.image_contrast),cv2.COLOR_BGR2GRAY)
+            
 
     @property
     def image_brightness(self):
@@ -308,8 +310,9 @@ class ImageViewer():
     def image_brightness(self, value):
         if 0 <= value <= 2:
             self._image_brightness = value
-            self._gray_scale_image = cv2.convertScaleAbs(self._original_image, alpha=self.image_brightness,
-                                                         beta=self.image_contrast)
+            self._gray_scale_image = cv2.cvtColor(cv2.convertScaleAbs(self._original_image, alpha=self.image_brightness,
+                                                     beta=self.image_contrast),cv2.COLOR_BGR2GRAY)
+            
 
     @property
     def image_fft(self):
@@ -446,6 +449,7 @@ class ImageMixer(object):
             weighted_magnitude = np.sum(np.array(weighted_magnitude),axis=0)
             weighted_phase = np.sum(np.array(weighted_phase),axis=0)
             weighted_fft = weighted_magnitude * np.exp(1j * weighted_phase)
+           
         else:
             weighted_real_part = np.sum(np.array(weighted_real_part),axis=0)
             weighted_imaginary_part = np.sum(np.array(weighted_imaginary_part),axis=0)
