@@ -34,24 +34,25 @@ class ViewOriginal(QGraphicsView):
             self.openImageDialog()
 
     def mouseMoveEvent(self, event: QMouseEvent):
-        # You can capture the mouse position during the drag here
-        brightness = abs(self.mapToScene(event.pos()).x() / 1000) * 2
-        contrast = (self.mapToScene(event.pos()).y() / 500) * 255
-        if brightness <= 1 and brightness >= 0:
-            self.image_viewer.image_brightness = brightness
-        if contrast <= 1 and contrast >= 0:
-            self.image_viewer.image_contrast = contrast
-        image_bytes = self.image_viewer.gray_scale_image_bytes()
+        if self.image_viewer is not None:
+            # You can capture the mouse position during the drag here
+            brightness = abs(self.mapToScene(event.pos()).x() / 1000) * 2
+            contrast = (self.mapToScene(event.pos()).y() / 500) * 255
+            if brightness <= 1 and brightness >= 0:
+                self.image_viewer.image_brightness = brightness
+            if contrast <= 1 and contrast >= 0:
+                self.image_viewer.image_contrast = contrast
+            image_bytes = self.image_viewer.gray_scale_image_bytes()
 
-        self.original_pixmap.loadFromData(image_bytes.tobytes())
-        # self.resize_pixmap(300, 200)
+            self.original_pixmap.loadFromData(image_bytes.tobytes())
+            # self.resize_pixmap(300, 200)
 
-        if not self.pixmap_item:
-            self.pixmap_item = QGraphicsPixmapItem(self.original_pixmap)
-            self.scene.addItem(self.pixmap_item)
+            if not self.pixmap_item:
+                self.pixmap_item = QGraphicsPixmapItem(self.original_pixmap)
+                self.scene.addItem(self.pixmap_item)
 
-        else:
-            self.pixmap_item.setPixmap(self.original_pixmap)
+            else:
+                self.pixmap_item.setPixmap(self.original_pixmap)
 
         # print("Mouse position during drag:", self.mapToScene(event.pos()))
 
@@ -100,7 +101,7 @@ class ViewWeight(QGraphicsView):
         # self.grayscale_pixmap = None
         self.resized_photo = None
         self.current_pixmap_item = None
-        self._current_state = 'm'
+        self._current_state = ''
         self._current_image = None
         self._current_clipped_image = None
         self._weight = 1
@@ -213,9 +214,10 @@ class ViewWeight(QGraphicsView):
 
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
-            self.start_point = self.mapToScene(event.pos())
-            self.drawing_rectangle = True
-            self.is_captured = True
+            if self.current_state != '':
+                self.start_point = self.mapToScene(event.pos())
+                self.drawing_rectangle = True
+                self.is_captured = True
         elif event.button() == Qt.RightButton:
             self.is_captured = False
             self.drawing_rectangle = False
