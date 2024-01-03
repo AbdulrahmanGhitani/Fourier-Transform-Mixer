@@ -40,6 +40,7 @@ class MainApp(QWidget, ui):
         self.image_weight_3 = ViewWeight()
         self.image_weight_4 = ViewWeight()
 
+
         self.output_image = None
 
         self.images = [
@@ -131,7 +132,7 @@ class MainApp(QWidget, ui):
         self.progressValue = 0
 
     def startProgress(self):
-        duration = 0.1
+        duration = 0.08
         steps = 100
         interval = int((duration * 1000) / steps)
 
@@ -146,6 +147,7 @@ class MainApp(QWidget, ui):
 
         if self.progressValue >= 100:
             self.timer.stop()
+            self.mix_btn.setText("Mix")
     def state_changed(self):
         if self.sender().currentText() != "Choose":
             i = self.combo_boxes.index(self.sender())
@@ -170,11 +172,16 @@ class MainApp(QWidget, ui):
 
 
     def mix(self):
+        images_to_mix = []
         for i in range(4):
-            if self.images[1][i].current_image is None:
-                return
-        self.output_image = ImageMixer(self.images[1])
+            if self.images[1][i].current_image is not None:
+                images_to_mix.append(self.images[1][i])
+        self.output_image = ImageMixer(images_to_mix)
         self.output_image.mode = self.mix_mode
+
+
+        self.mix_btn.setText("Cancel")
+
 
         self.mix_graphics_view_index = int(self.activate_radioButton_1.isChecked())
 

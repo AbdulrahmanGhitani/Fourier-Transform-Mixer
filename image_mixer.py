@@ -102,7 +102,7 @@ class ViewWeight(QGraphicsView):
         # self.grayscale_pixmap = None
         self.resized_photo = None
         self.current_pixmap_item = None
-        self._current_state = ''
+        self._current_state = 'm'
         self._current_image = None
         self._current_clipped_image = None
         self._weight = 1
@@ -263,11 +263,7 @@ class ImageViewer():
         self._image_fft_shift = np.fft.fftshift(self.image_fft)
         self._image_ifft = None
         self._original_image_magnitude = None
-        self._weight_of_magnitude = 1
-        self._equalized_image_magnitude = self.original_image_magnitude
         self._original_image_phase = None
-        self._weight_of_phase = 1
-        self._equalized_image_phase = self.original_image_phase
         self._image_real_part = None
         self._image_imaginary_part = None
         mixer_logger.info("Initialize ImageMixer class")
@@ -332,35 +328,9 @@ class ImageViewer():
         return self._original_image_magnitude
 
     @property
-    def equalized_image_magnitude(self):
-        self._equalized_image_magnitude *= self._weight_of_magnitude
-        return self._equalized_image_magnitude
-
-    @property
-    def weight_of_magnitude(self):
-        return self._weight_of_magnitude
-
-    @weight_of_magnitude.setter
-    def weight_of_magnitude(self, value):
-        self._weight_of_magnitude = value / 10
-
-    @property
     def original_image_phase(self):
         self._original_image_phase = np.angle(self._image_fft_shift)
         return self._original_image_phase
-
-    @property
-    def equalized_image_phase(self):
-        self._equalized_image_phase *= self._weight_of_phase
-        return self.equalized_image_phase
-
-    @property
-    def weight_of_phase(self):
-        return self._weight_of_phase
-
-    @weight_of_phase.setter
-    def weight_of_phase(self, value):
-        self._weight_of_phase = value / 10
 
     @property
     def image_real_part(self):
