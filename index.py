@@ -160,7 +160,7 @@ class MainApp(QWidget, ui):
                 for k in self.states:
                     if self.states[k] == self.sender().currentText():
                         state = k
-                self.images[1][i].image = self.images[0][i].image_viewer
+                self.images[1][i].image_viewer = self.images[0][i].image_viewer
                 self.images[1][i].current_state = state
         else:
             index_logger.warning("User choose (Choose)")
@@ -200,7 +200,7 @@ class MainApp(QWidget, ui):
     def toggle_region(self):
         i = self.outer_region_checkBoxs.index(self.sender())
         if self.sender().isChecked():
-            index_logger.debug("outer region is: ", self.sender().isChecked)
+            index_logger.debug("outer region is: ", self.sender().isChecked())
             self.images[1][i].is_outer_region = True
         else:
             self.images[1][i].is_outer_region = False

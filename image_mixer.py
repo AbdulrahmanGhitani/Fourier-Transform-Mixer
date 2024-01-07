@@ -24,7 +24,6 @@ class ViewOriginal(QGraphicsView):
         self.setScene(self.scene)
         self.pixmap_item = None
         self.original_pixmap = None
-        self.grayscale_pixmap = None
         self.path = self.path()
         self.image_viewer = None  # ImageViewer object
         mixer_logger.info("Initialize ViewOriginal class")
@@ -34,19 +33,16 @@ class ViewOriginal(QGraphicsView):
             self.openImageDialog()
 
     def mouseMoveEvent(self, event: QMouseEvent):
-        if self.image_viewer is not None:
+        if self.image_viewer:
             # You can capture the mouse position during the drag here
             brightness = abs(self.mapToScene(event.pos()).x() / 1000) * 2
             contrast = (self.mapToScene(event.pos()).y() / 500) * 255
-            if brightness <= 1 and brightness >= 0:
+            if 1 >= brightness >= 0:
                 self.image_viewer.image_brightness = brightness
-            if contrast <= 1 and contrast >= 0:
+            if 1 >= contrast >= 0:
                 self.image_viewer.image_contrast = contrast
             image_bytes = self.image_viewer.gray_scale_image_bytes()
-            # plt.imshow(self.image_viewer.gray_scale_image)
-            # plt.show()
             self.original_pixmap.loadFromData(image_bytes.tobytes())
-            # self.resize_pixmap(300, 200)
 
             if not self.pixmap_item:
                 self.pixmap_item = QGraphicsPixmapItem(self.original_pixmap)
@@ -55,7 +51,6 @@ class ViewOriginal(QGraphicsView):
             else:
                 self.pixmap_item.setPixmap(self.original_pixmap)
 
-        # print("Mouse position during drag:", self.mapToScene(event.pos()))
 
     def openImageDialog(self):
         options = QFileDialog.Options()
@@ -96,10 +91,9 @@ class ViewWeight(QGraphicsView):
 
         self.scene = QGraphicsScene(self)
         self.setScene(self.scene)
-        self.image = None  # image_viewer
+        self.image_viewer = None  # image_viewer
         self.qt_image = None
         self.current_pixmap = None
-        # self.grayscale_pixmap = None
         self.resized_photo = None
         self.current_pixmap_item = None
         self._current_state = 'm'
@@ -114,6 +108,7 @@ class ViewWeight(QGraphicsView):
         self._rect_x_limits = None
         self._rect_y_limits = None
         self._is_captured = False
+        self.weights_dict = {}
         mixer_logger.info("Initialize VeiwWeight class")
 
     @property
@@ -161,17 +156,24 @@ class ViewWeight(QGraphicsView):
 
     @current_state.setter
     def current_state(self, value):
+        self.weights_dict = {
+            'm': self.image_viewer.image_magnitude,
+            'p': self.image_viewer.image_phase,
+            'r': self.image_viewer.image_real_part,
+            'i': self.image_viewer.image_imaginary_part
+        }
         self._current_state = value
-        if value == 'm':
-            self.current_image = self.image.original_image_magnitude
-        elif value == 'p':
-            self.current_image = self.image.original_image_phase
-        elif value == 'r':
-            self.current_image = self.image.image_real_part
-        elif value == 'i':
-            self.current_image = self.image.image_imaginary_part
-        else:
-            mixer_logger.error("Invalid weight state")
+        self.current_image = self.weights_dict[value]
+        # if value == 'm':
+        #     self.current_image = self.image_viewer.image_magnitude
+        # elif value == 'p':
+        #     self.current_image = self.image_viewer.image_phase
+        # elif value == 'r':
+        #     self.current_image = self.image_viewer.image_real_part
+        # elif value == 'i':
+        #     self.current_image = self.image_viewer.image_imaginary_part
+        # else:
+        #     mixer_logger.error("Invalid weight state")
 
         self.qt_image = self.convert_cv_to_qt((20*np.log10(self.current_image)).astype(np.uint8))
         self.current_pixmap = QPixmap(self.qt_image)
@@ -251,7 +253,7 @@ class ViewWeight(QGraphicsView):
             self.start_point = None
 
 
-class ImageViewer():
+class ImageViewer:
     def __init__(self, path):
 
         self._original_image = cv2.resize(cv2.imread(f'{path}'), (320, 170), cv2.INTER_LINEAR)
@@ -262,8 +264,8 @@ class ImageViewer():
         self._image_fft = np.fft.fft2(self._gray_scale_image)
         self._image_fft_shift = np.fft.fftshift(self.image_fft)
         self._image_ifft = None
-        self._original_image_magnitude = None
-        self._original_image_phase = None
+        self._image_magnitude = None
+        self._image_phase = None
         self._image_real_part = None
         self._image_imaginary_part = None
         mixer_logger.info("Initialize ImageMixer class")
@@ -323,14 +325,14 @@ class ImageViewer():
         pass
 
     @property
-    def original_image_magnitude(self):
-        self._original_image_magnitude = np.abs(self.image_fft_shift)
-        return self._original_image_magnitude
+    def image_magnitude(self):
+        self._image_magnitude = np.abs(self.image_fft_shift)
+        return self._image_magnitude
 
     @property
-    def original_image_phase(self):
-        self._original_image_phase = np.angle(self._image_fft_shift)
-        return self._original_image_phase
+    def image_phase(self):
+        self._image_phase = np.angle(self._image_fft_shift)
+        return self._image_phase
 
     @property
     def image_real_part(self):
@@ -432,5 +434,3 @@ class ImageMixer(Thread):
         _mixed_image = cv2.resize(_mixed_image,(500, 270), cv2.INTER_LINEAR)
 
         return _mixed_image
-    def run(self):
-        pass

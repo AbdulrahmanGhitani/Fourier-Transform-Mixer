@@ -208,7 +208,7 @@ QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
 QPushButton{
  /*border:2px solid #05B8CC;*/
  background-color: #176B87;
-padding: 3px;
+padding: 3px 6px;
  color:rgb(255, 255, 255);
  border-radius: 10px;
  font-weight:bold;
@@ -1039,7 +1039,6 @@ QProgressBar::chunk{
           <font>
            <family>Ubuntu</family>
            <pointsize>-1</pointsize>
-           <weight>75</weight>
            <bold>true</bold>
           </font>
          </property>
@@ -1104,7 +1103,6 @@ QProgressBar::chunk{
           <font>
            <family>Ubuntu</family>
            <pointsize>-1</pointsize>
-           <weight>75</weight>
            <bold>true</bold>
           </font>
          </property>
