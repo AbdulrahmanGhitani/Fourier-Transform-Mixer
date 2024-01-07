@@ -10,7 +10,6 @@ import matplotlib.pyplot as plt
 import logging
 from threading import Thread
 
-
 mixer_logger = logging.getLogger("image_mixer.py")
 
 
@@ -51,7 +50,6 @@ class ViewOriginal(QGraphicsView):
             else:
                 self.pixmap_item.setPixmap(self.original_pixmap)
 
-
     def openImageDialog(self):
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
@@ -74,7 +72,7 @@ class ViewOriginal(QGraphicsView):
         self.original_pixmap = QPixmap()
         self.image_viewer = Image(filename)
         image_bytes = self.image_viewer.gray_scale_image_bytes()
-        
+
         self.original_pixmap.loadFromData(image_bytes.tobytes())
 
         if not self.pixmap_item:
@@ -118,6 +116,7 @@ class ViewWeight(QGraphicsView):
     @is_outer_region.setter
     def is_outer_region(self, value):
         self._is_outer_region = value
+
     @property
     def is_captured(self):
         return self._is_captured
@@ -175,7 +174,7 @@ class ViewWeight(QGraphicsView):
         # else:
         #     mixer_logger.error("Invalid weight state")
 
-        self.qt_image = self.convert_cv_to_qt((20*np.log10(self.current_image)).astype(np.uint8))
+        self.qt_image = self.convert_cv_to_qt((20 * np.log10(self.current_image)).astype(np.uint8))
         self.current_pixmap = QPixmap(self.qt_image)
         if self.current_pixmap_item:
             self.current_pixmap_item.setPixmap(self.current_pixmap)
@@ -296,8 +295,7 @@ class Image:
         if -255 <= value <= 255:
             self._image_contrast = value
             self._gray_scale_image = cv2.cvtColor(cv2.convertScaleAbs(self._original_image, alpha=self.image_brightness,
-                                                         beta=self.image_contrast),cv2.COLOR_BGR2GRAY)
-            
+                                                                      beta=self.image_contrast), cv2.COLOR_BGR2GRAY)
 
     @property
     def image_brightness(self):
@@ -308,8 +306,7 @@ class Image:
         if 0 <= value <= 2:
             self._image_brightness = value
             self._gray_scale_image = cv2.cvtColor(cv2.convertScaleAbs(self._original_image, alpha=self.image_brightness,
-                                                     beta=self.image_contrast),cv2.COLOR_BGR2GRAY)
-            
+                                                                      beta=self.image_contrast), cv2.COLOR_BGR2GRAY)
 
     @property
     def image_fft(self):
@@ -395,7 +392,7 @@ class ImageMixer(Thread):
         self._mixed_image = value
 
     def _mix_images(self, mode):
-        #we use logging to detect (axis=0)
+        # we use logging to detect (axis=0)
         mixer_logger.debug("Enter mix_images function")
         weighted_phase = []
         weighted_magnitude = []
@@ -419,17 +416,17 @@ class ImageMixer(Thread):
         weighted_fft = 0
         if mode == 'mp':
             mixer_logger.debug("Enter if(mode == 'mp') at mix_images function")
-            weighted_magnitude = np.sum(np.array(weighted_magnitude),axis=0)
-            weighted_phase = np.sum(np.array(weighted_phase),axis=0)
+            weighted_magnitude = np.sum(np.array(weighted_magnitude), axis=0)
+            weighted_phase = np.sum(np.array(weighted_phase), axis=0)
             weighted_fft = weighted_magnitude * np.exp(1j * weighted_phase)
-           
+
         else:
-            weighted_real_part = np.sum(np.array(weighted_real_part),axis=0)
-            weighted_imaginary_part = np.sum(np.array(weighted_imaginary_part),axis=0)
+            weighted_real_part = np.sum(np.array(weighted_real_part), axis=0)
+            weighted_imaginary_part = np.sum(np.array(weighted_imaginary_part), axis=0)
             weighted_fft = weighted_real_part + weighted_imaginary_part * 1j
         self.mixed_fft = weighted_fft
         _mixed_image = np.abs(np.fft.ifft2(self.mixed_fft)).astype(np.uint8)
         mixer_logger.debug("calculate inverse fft for mix_images function")
-        _mixed_image = cv2.resize(_mixed_image,(500, 270), cv2.INTER_LINEAR)
+        _mixed_image = cv2.resize(_mixed_image, (500, 270), cv2.INTER_LINEAR)
 
         return _mixed_image
