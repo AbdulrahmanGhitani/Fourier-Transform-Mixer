@@ -72,7 +72,7 @@ class ViewOriginal(QGraphicsView):
     def loadImage(self, filename):
         # self.original_pixmap = QPixmap(filename)
         self.original_pixmap = QPixmap()
-        self.image_viewer = ImageViewer(filename)
+        self.image_viewer = Image(filename)
         image_bytes = self.image_viewer.gray_scale_image_bytes()
         
         self.original_pixmap.loadFromData(image_bytes.tobytes())
@@ -253,9 +253,8 @@ class ViewWeight(QGraphicsView):
             self.start_point = None
 
 
-class ImageViewer:
+class Image:
     def __init__(self, path):
-
         self._original_image = cv2.resize(cv2.imread(f'{path}'), (320, 170), cv2.INTER_LINEAR)
         self._gray_scale_image = cv2.cvtColor(self._original_image, cv2.COLOR_BGR2GRAY)
         self._image_size = None
@@ -357,7 +356,7 @@ class ImageMixer(Thread):
         self._mixed_image = None
         self._mode = 'mp'  # magnitude/phase or real/imaginary (mp|ri)
         self.run()
-    
+
     @property
     def mode(self):
         return self._mode
